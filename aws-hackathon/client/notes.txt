@@ -1,7 +1,0 @@
-Colors:
-rgb(32,39,56) - rgb(12,14,20) // Background gradient
-#252c37 // Background color
-#161d28 // Darker shade
-
-
-#ece552 - #bb5abc
