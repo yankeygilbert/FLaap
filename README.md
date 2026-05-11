@@ -20,7 +20,7 @@ This project is specificslly aimed at catching structural, logical and theoritic
 
 architecture-beta
     group Architecture(server)[Design]
-        service user(mdi:user)[User] in Architecture
+        service user(server)[User] in Architecture
         group ragArch(database)[rag] in Architecture
             service llama(server)[llamlaIndex] in ragArch
             service ollama(server)[ollamaEngine] in ragArch
