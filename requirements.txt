@@ -1,0 +1,4 @@
+google-genai==2.0.1
+langgraph==1.2.0
+llama-index==0.14.21
+streamlit==1.57.0

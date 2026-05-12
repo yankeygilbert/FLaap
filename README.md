@@ -37,7 +37,7 @@ architecture-beta
                 service Struct(server)[StructuralFlawAnalyser] in langGraph
                 service logic(server)[LogicalFlawAnalyser] in langGraph
                 service  Hypo(server)[TheoritcalFlawAnalyser] in langGraph 
-                service Coordinator(server)[langchainGraph] in langGraph
+                service Coordinator(server)[Aggregator] in langGraph
                 junction junctionCenter in langGraph
 
                 Coordinator:B -- T:junctionCenter
