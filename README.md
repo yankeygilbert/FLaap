@@ -19,29 +19,31 @@ This project is specificslly aimed at catching structural, logical and theoritic
 ```mermaid
 
 architecture-beta
+
     group Architecture(server)[Design]
         service user(server)[User] in Architecture
         group ragArch(database)[rag] in Architecture
             service llama(server)[llamlaIndex] in ragArch
             service ollama(server)[ollamaEngine] in ragArch
-            service qdrant(database)[qdrant] in ragArch
+            service qdrant(database)[QdrantVectorStore] in ragArch
             service Model(server)[EmbeddingsModel] in ragArch
 
             ollama:L -- R:llama 
-            llama:B -- T:qdrant
-            ollama:R -- L:Model
+            llama:T -- B:qdrant
+            ollama:T -- B:Model
+            qdrant:R -- L:Model
 
-        group tools(server)[agent] in Architecture
+        group tools(server)[Agents] in Architecture
 
-            group langGraph(server)[langGraph] in tools
-                service Struct(server)[StructuralFlawAnalyser] in langGraph
-                service logic(server)[LogicalFlawAnalyser] in langGraph
-                service  Hypo(server)[TheoritcalFlawAnalyser] in langGraph 
-                service Coordinator(server)[Aggregator] in langGraph
-                junction junctionCenter in langGraph
+            group MCP(server)[MCP Architecture] in tools
+                service Struct(server)[StructuralFlawAnalyser MCP Server] in MCP
+                service logic(server)[LogicalFlawAnalyser MCP Server] in MCP
+                service  Hypo(server)[TheoritcalFlawAnalyser MCP Server] in MCP 
+                service Coordinator(server)[Orchestrator MCP client] in MCP
+                junction junctionCenter in MCP
 
-                Coordinator:B -- T:junctionCenter
-                Struct:R -- L:junctionCenter
+                Coordinator:L -- R:junctionCenter
+                Struct:B -- T:junctionCenter
                 logic:R -- L:junctionCenter
                 Hypo:T -- B:junctionCenter
 
