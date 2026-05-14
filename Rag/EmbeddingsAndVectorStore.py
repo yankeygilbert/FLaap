@@ -36,9 +36,6 @@ def EmbbeddingsAndIndexing(prompt: str = None, data: list[io.BytesIO] = None):
         return
 
     # --- Embed user prompt ---
-   
-    # Add this temporarily to EmbeddingsAndVectorStore.py inside the prompt try block
-
     if prompt:
         try:
             print("DEBUG 1: creating vector store")
@@ -60,6 +57,7 @@ def EmbbeddingsAndIndexing(prompt: str = None, data: list[io.BytesIO] = None):
             print(f"Prompt embedding failed: {e}")
             import traceback
             traceback.print_exc()  # prints full error stack
+            
     # --- Embed attached PDF documents ---
     if data:
         try:
