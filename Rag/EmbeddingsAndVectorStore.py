@@ -1,15 +1,18 @@
 import ollama
 import io
+import base64
 import tempfile
 import os
 import qdrant_client
+import fitz
 
 from llama_index.core import VectorStoreIndex, Settings, StorageContext, SimpleDirectoryReader
 from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.ollama import OllamaEmbedding
-from llama_index.readers.file import PDFReader
+from llama_index.core.schema import TextNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
+from  DataProcessor import custom_ocr_image_extractor
 
 # --- Ollama embeddings configuration ---
 ollama_embeddings= OllamaEmbedding(
@@ -26,7 +29,7 @@ Settings.text_splitter = SentenceSplitter(chunk_size=512, chunk_overlap=50)
 QDrant_Client = qdrant_client.QdrantClient(host="localhost", port=6333)
 
 #--- Embeddings and Indexing Function---
-def EmbbeddingsAndIndexing(prompt: str="", data: list[io.BytesIO]=[], ):
+def EmbbeddingsAndIndexing(prompt: str="", data: list=[], ):
 
     index = None
 
@@ -76,13 +79,17 @@ def EmbbeddingsAndIndexing(prompt: str="", data: list[io.BytesIO]=[], ):
 
                     with open(file_temp_targetpath, 'wb') as pdf_file:
                         pdf_file.write(filebytes)
-                    
+
+                file_extractor = {".pdf": custom_ocr_image_extractor} 
                 reader = SimpleDirectoryReader(
                     input_dir= temp_dir_path,
-                    recursive= False
+                    file_extractor= file_extractor, #type: ignore 
+                  
                 )
                 
                 pdf_documents= reader.load_data()
+
+            
 
             index = VectorStoreIndex.from_documents(
                 pdf_documents,
@@ -115,9 +122,10 @@ def context_retrieval(query_memory: str= "", query_agent: str= ""):
 
         index= VectorStoreIndex.from_vector_store(vector_store= vec_store)
         
-        response= index.as_query_engine(query_memory)
+        response= index.as_retriever(similarity_top_k = 3 )
+        nodes = response.retrieve(query_agent)
 
-        return response
+        return nodes
     
     if query_agent:
         vec_store =QdrantVectorStore(
@@ -126,7 +134,8 @@ def context_retrieval(query_memory: str= "", query_agent: str= ""):
         )
 
         index= VectorStoreIndex.from_vector_store(vector_store= vec_store)
-        response= index.as_query_engine(query_agent)
+        response= index.as_retriever(similarity_top_k = 3 )
+        nodes = response.retrieve(query_agent)
 
-        return response
+        return nodes
 

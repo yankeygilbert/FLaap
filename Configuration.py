@@ -6,21 +6,41 @@ from ollama import chat
 from dotenv import load_dotenv
 
 load_dotenv()
+client1 = genai.Client(api_key = os.getenv("Gemini_Api_Key"))
+client2 = genai.Client(api_key=os.getenv("Gemini_Api_Key2"))
+client3 = genai.Client(api_key=os.getenv("Gemini_Api_Key3"))
 
 #---Test Connection to Gemini---
 def Test_Conncection_To_Gemini():
     try:
-        client = genai.Client(api_key = os.getenv("Gemini_Api_Key"))
-
-        Response = client.models.generate_content(
+        Response = client1.models.generate_content(
             model = "gemini-3-flash-preview",
             contents = "Respond with word 'Success' if you I can reach you"
         )
 
-        print(f'Connection to Gemini Status:{Response.text}')
+        print(f'Connection to Gemini-1 Status:{Response.text}')
     except Exception as e:
         print(f'Connection Failed \n Error Details:{e}')
 
+    try:
+        Response = client2.models.generate_content(
+            model = "gemini-3-flash-preview",
+            contents = "Respond with word 'Success' if you I can reach you"
+        )
+
+        print(f'Connection to Gemin-2 Status:{Response.text}')
+    except Exception as e:
+        print(f'Connection Failed \n Error Details:{e}')
+
+    try:
+        Response = client3.models.generate_content(
+            model = "gemini-3-flash-preview",
+            contents = "Respond with word 'Success' if you I can reach you"
+        )
+
+        print(f'Connection to Gemini-3 Status:{Response.text}')
+    except Exception as e:
+        print(f'Connection Failed \n Error Details:{e}')
 
 def Test_Conncection_To_Gemma3():
     try:
