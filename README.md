@@ -40,11 +40,13 @@ architecture-beta
                 service logic(server)[LogicalFlawAnalyser MCP Server] in MCP
                 service  Hypo(server)[TheoritcalFlawAnalyser MCP Server] in MCP 
                 service Coordinator(server)[Orchestrator MCP client] in MCP
+                service gemma(server)[GemmaLocal] in MCP
                 junction junctionCenter in MCP
 
                 Coordinator:L -- R:junctionCenter
                 Struct:B -- T:junctionCenter
                 logic:R -- L:junctionCenter
+                Coordinator:B -- T:gemma
                 Hypo:T -- B:junctionCenter
 
         user:B -- T:Coordinator
