@@ -78,7 +78,7 @@ architecture-beta
     struct<--> Indxing
     log <--> Indxing
     hypo <--> Indxing
-    Agents -->  Agg
+
 ```
 
 
