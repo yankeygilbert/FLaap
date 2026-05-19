@@ -61,7 +61,7 @@ architecture-beta
 
     User["User{Promt,Documents}"] <--> orc["orchestraton Engine"]
     orc --> |Indexing Request|Indxing["llama-Index"]
-    orc --> Mcp["mcpServers"]
+    orc --> |Enhanced Prompt|Mcp["mcpServers"]
     orc <--> gemma["Gemma3:4b Local"]
     gemma <--> contxtExp["ContextExpansion"]
     gemma <--> Agg["Analytics Aggregrator"]
