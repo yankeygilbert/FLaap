@@ -53,4 +53,33 @@ architecture-beta
         Coordinator:R -- L:llama
 ```
 
+#### PIPELINE STAGES
+
+```mermaid
+
+    graph TD
+
+    User["User{Promt,Documents}"] <--> orc["orchestraton Engine"]
+    orc --> |Indexing Request|Indxing["llama-Index"]
+    orc --> Mcp["mcpServers"]
+    orc <--> gemma["Gemma3:4b Local"]
+    gemma <--> contxtExp["ContextExpansion"]
+    gemma <--> Agg["Analytics Aggregrator"]
+
+    subgraph Agents ["Gemini  Analytics Agents"]
+    Mcp --> struct["StructuralAgent"]
+    Mcp --> log["LogicalAgen"]
+    Mcp --> hypo["TheoriticalAgent"]
+    end
+
+    Indxing <-->Ollama["GemmaEmbeddings Local: Ollama"]
+    Indxing <-->|Vector Stores| Qdrant["Qdrant Vec Store"]
+    struct<--> Indxing
+    log <--> Indxing
+    hypo <--> Indxing
+    Agents -->  Agg
+```
+
+
+
 
