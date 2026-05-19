@@ -12,7 +12,7 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core.schema import TextNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
-from  DataProcessor import custom_ocr_image_extractor
+from  Rag.DataProcessor import custom_ocr_image_extractor
 
 # --- Ollama embeddings configuration ---
 ollama_embeddings= OllamaEmbedding(

@@ -1,16 +1,33 @@
 import asyncio
 
 import streamlit as st
-from Configuration import Test_Conncection_To_Gemini ,Test_Conncection_To_Gemma3
+from Configuration import Test_All_Gemini_Connection, Test_Conncection_To_Gemma3
 from Orchestration import ragembeddings,runAnalysis
 
+st.markdown(
+    '''
+    <style>
+            [data-testid="stMetricValue"] {
+        font-size: 20px !important;
+        font-family: 'Courier New', monospace !important;
+    }
+    </style>
+    ''',
+    unsafe_allow_html= True
+)
 
+with st.spinner("Connecting to LLMS"):
+    GeminiConnetions = asyncio.run(Test_All_Gemini_Connection())
+    GemmaConnection = Test_Conncection_To_Gemma3()
+   
 st.subheader("SYSTEM STATUS")
 
 with st.container(border= True):
     st.write("LLM & RAG Connection Test")
-    st.metric(label="GeminiConnections", value=Test_Conncection_To_Gemini())
-    st.metric(label="Gemma3Connection",value=Test_Conncection_To_Gemma3())
+    st.metric(label="Gemini1 Status:", value=GeminiConnetions[0]) # type: ignore
+    st.metric(label="Gemini2 Status", value=GeminiConnetions[1]) # type: ignore
+    st.metric(label="Gemini3 Status", value=GeminiConnetions[2]) # type: ignore
+    st.metric(label="Gemma3:4b Status",value=GemmaConnection) # type: ignore
 
 with st.form("Analysis Tool"):
     prompt = st.text_input("Prompt")
@@ -27,6 +44,13 @@ with st.form("Analysis Tool"):
 
         if not prompt:
             st.error("A prompt is required")
+        
         else:
-           async def main():
-                await runAnalysis(prompt)
+            st.subheader("Analysis Result")
+            async def main():
+                    return await runAnalysis(prompt)
+
+            with st.container(border= True):
+                result = asyncio.run(main())  # type: ignore
+                st.text(result) 
+

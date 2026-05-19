@@ -76,7 +76,7 @@ async def runAnalysis(prompt: str):
         await asyncio.gather(
         Theoritical_Domain.connect_to_server("mcp_client_server/theoriticalserver.py",),
         Structural_Domain.connect_to_server("mcp_client_server/Strcturalserver.py"),
-        Logical_Domain.connect_to_server("mcp_client_server/theoriticalserver.py")
+        Logical_Domain.connect_to_server("mcp_client_server/logicalserver.py")
         )
 
     except Exception as e:
@@ -104,7 +104,7 @@ async def runAnalysis(prompt: str):
             {
             'role': 'user',
             'content': [
-                'Merge all these Responses into One cohessive Response Stict to what is provided',
+                'Merge all these Responses into One cohessive Response Stictly adhere to what is provided',
                 f'{result[0]}', # type: ignore
                 f'{result[1]}', # type: ignore
                 f'{result[2]}'  # type: ignore

@@ -49,7 +49,6 @@ architecture-beta
 
         user:B -- T:Coordinator
         Coordinator:R -- L:llama
-
-
 ```
+
 
