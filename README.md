@@ -62,11 +62,12 @@ architecture-beta
     User["User{Promt,Documents}"] <--> orc["orchestraton Engine"]
     orc --> |Indexing Request|Indxing["llama-Index"]
     orc --> |Enhanced Prompt|Mcp["mcpServers"]
+    Mcp --> |Analytics Respsones| orc
     orc <--> gemma["Gemma3:4b Local"]
     gemma <--> contxtExp["ContextExpansion"]
     gemma <--> Agg["Analytics Aggregrator"]
 
-    subgraph Agents ["Gemini  Analytics Agents"]
+    subgraph Agents ["Agents"]
     Mcp --> struct["StructuralAgent"]
     Mcp --> log["LogicalAgen"]
     Mcp --> hypo["TheoriticalAgent"]
