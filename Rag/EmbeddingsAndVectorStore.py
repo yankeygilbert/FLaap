@@ -12,7 +12,7 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core.schema import TextNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
-from  Rag.DataProcessor import custom_ocr_image_extractor
+from  Rag.DocumentProcessor import custom_ocr_image_extractor
 
 # --- Ollama embeddings configuration ---
 ollama_embeddings= OllamaEmbedding(
@@ -83,7 +83,7 @@ def EmbbeddingsAndIndexing(prompt: str="", data: list=[], ):
                 file_extractor = {".pdf": custom_ocr_image_extractor} 
                 reader = SimpleDirectoryReader(
                     input_dir= temp_dir_path,
-                    file_extractor= file_extractor, #type: ignore 
+                    file_extractor= file_extractor #type: ignore 
                   
                 )
                 
@@ -106,11 +106,11 @@ def EmbbeddingsAndIndexing(prompt: str="", data: list=[], ):
 
 # --- Context Retrieveal ---
 # Implemented For Memory query and Context Data for Analytics agents Query.
-def context_retrieval(query_memory: str= "", query_agent: str= ""):
+def context_retrieval(query_memory: str= "", query_Docs: str= ""):
     response = None
     index = None
 
-    if not query_memory and not query_agent:
+    if not query_memory and not query_Docs:
         print("No inference Prompt provided to retrieve ")
         return
 
@@ -122,20 +122,20 @@ def context_retrieval(query_memory: str= "", query_agent: str= ""):
 
         index= VectorStoreIndex.from_vector_store(vector_store= vec_store)
         
-        response= index.as_retriever(similarity_top_k = 3 )
-        nodes = response.retrieve(query_agent)
+        response= index.as_retriever(similarity_top_k = 2 )
+        nodes = response.retrieve(query_Docs)
 
         return nodes
     
-    if query_agent:
+    if query_Docs:
         vec_store =QdrantVectorStore(
             collection_name= "ResearchDocumentation",
             client= QDrant_Client
         )
 
         index= VectorStoreIndex.from_vector_store(vector_store= vec_store)
-        response= index.as_retriever(similarity_top_k = 3 )
-        nodes = response.retrieve(query_agent)
+        response= index.as_retriever(similarity_top_k = 2 )
+        nodes = response.retrieve(query_Docs)
 
         return nodes
 

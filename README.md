@@ -74,6 +74,8 @@ architecture-beta
     end
 
     Indxing <-->Ollama["GemmaEmbeddings Local: Ollama"]
+    Indxing <-->DocP["DocmumentProcesso"]
+    DocP --> ocr["OCR & Base64 PayLoad Encoding"]
     Indxing <-->|Vector Stores| Qdrant["Qdrant Vec Store"]
     struct<--> Indxing
     log <--> Indxing

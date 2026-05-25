@@ -4,11 +4,12 @@ import base64
 
 import pytesseract
 from pdf2image import convert_from_path
-from llama_index.core.schema import Document
+from llama_index.core import Document
 
 def custom_ocr_image_extractor(file_path: str, errors: str = "ignore") -> list[Document]:
     """Callback function used by SimpleDirectoryReader to parse PDFs as images."""
-    pages = convert_from_path(file_path, dpi=150)
+    print("Converting Pages to Images and Extracting Text Content")
+    pages = convert_from_path(file_path, dpi=300)
     documents = []
 
     for page_num, page_image in enumerate(pages):
@@ -17,7 +18,7 @@ def custom_ocr_image_extractor(file_path: str, errors: str = "ignore") -> list[D
         
         # Base64 compress the visual page image for the Qdrant Payload
         buffered = io.BytesIO()
-        page_image.save(buffered, format="JPEG", quality=80)
+        page_image.save(buffered, format="JPEG", quality=90)
         img_b64_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
         
         if ocr_text.strip():
@@ -30,7 +31,12 @@ def custom_ocr_image_extractor(file_path: str, errors: str = "ignore") -> list[D
                     "full_page_image_b64": img_b64_str
                 }
             )
-            doc.metadata_template = "File: {source_file} | Page: {page_number}\n\nContent:\n{content}"
+            doc.metadata_template = "{key}: {value}"
+            doc.metadata_separator = "|"
+            doc.text_template = "File: {source_file} | Page: {page_number}\n\nContent:\n{content}"
+            doc.excluded_embed_metadata_keys = ["full_page_image_b64"]
+            doc.excluded_llm_metadata_keys = ["full_page_image_b64"]
             documents.append(doc)
+    print("Conversion and Extraction Done")
             
     return documents
