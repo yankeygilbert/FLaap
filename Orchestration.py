@@ -14,7 +14,6 @@ def ragembeddings(Prompt: str = "", Data: list =[]):
 
 #--- Prompt Expansion Sytem Prompt for Gemma ---#
 PROMPT_EXPANDER_SYSTEM_ROLE = """
-
     You are an advanced Prompt Engineering middleware engine.
     Your sole task is to rewrite, enrich, and expand the user's brief query into a comprehensive, 
     highly detailed prompt. To do this, you must analyze the provided PDF TECHNICAL CONTEXT 
@@ -71,7 +70,7 @@ def promptexpansion(prompt: str) -> str:
         A research paper Abstract, methodology, Implementation, Results, Discussion, Evaluation,
         or Findings sections. This is for prompt expansion to to address vague prompts. Prompt :
     """
-    gemmaEmbInstructPfx: str = Instruction_Prefix.strip() + prompt
+    gemmaEmbInstructPfx: str = Instruction_Prefix.strip()+ " User Prompt: "+ prompt
     extracted_context = context_retrieval(query_Docs= gemmaEmbInstructPfx)
     response = contextpromptexpansion(extracted_context,prompt)
 

@@ -62,7 +62,8 @@ async def logicalanalysis(args: dict ) :
     
     async def contextRet(prompt):
 
-        contextret = context_retrieval(query_Docs= prompt)
+        gemmaEmbInstructPfx: str = logicalExtractionQuery.strip() + " User Prompt: "+ prompt
+        contextret = context_retrieval(query_Docs= gemmaEmbInstructPfx)
         
         pdf_context= [context.node.text for context in contextret]# type:ignore
         page_num = [context.node.metadata.get("page_number") for context in contextret]# type:ignore

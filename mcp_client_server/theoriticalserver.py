@@ -5,14 +5,20 @@ from mcp.server.fastmcp import FastMCP
 from Configuration import client1
 from mcp.server.stdio import stdio_server
 from google.genai import types
-
+from Rag.EmbeddingsAndVectorStore import context_retrieval
 server = FastMCP("theoriticalServer")
 
 #--- Analysis Server Tool method with search grounding activated ---#
 @server.tool(name="theoriticalServer")
 async def logicalanalysis(args: dict ) :
+    """Tool To Perform logical Flaw Analysis
+
+        Args:
+            prompt: A user Prompt
+    """
+
     systemPrompt = """
-        You are logical Flaw Anaylsis Specialist In R&D     
+        You are Theoritical Flaw Anaylsis Specialist In R&D     
         Your Job is to analyse and detection logical flaws in a Design Implementation
         Your role is to examine technical implementations, and identify all logical weaknesses.
         Your analysis must include:
@@ -43,7 +49,7 @@ async def logicalanalysis(args: dict ) :
    
     query = args["prompt"]
 
-    logicalExtractionQuery = """
+    TheoriticalExtractionQuery = """
         Represent this query for retrieving relevant academic document sections stored as metadata pages(images): 
         A research paper Abstract, Introduction, Background, Literature Review, and Discussion sections containing: 
         primary hypotheses, foundational premises, axiomatic assumptions, causal mechanisms, and conceptual frameworks. 
@@ -51,6 +57,32 @@ async def logicalanalysis(args: dict ) :
         and theoretical paradigms necessary to detect theoretical flaws, such as circular reasoning, unbacked conceptual leaps, 
         flawed premises, and invalid causal claims.
         """
+
+    async def contextRet(prompt):
+
+        gemmaEmbInstructPfx: str = TheoriticalExtractionQuery.strip() +" User Prompt:"+ prompt
+        contextret = context_retrieval(query_Docs= gemmaEmbInstructPfx)
+        
+        pdf_context= [context.node.text for context in contextret]# type:ignore
+        page_num = [context.node.metadata.get("page_number") for context in contextret]# type:ignore
+        base64imgEncoding =[context.node.get("full_page_image_b64") for context in contextret] # type:ignore
+        source_file = [context.node.metadata.get("source_file") for context in contextret]# type:ignore
+
+        content = [ f"""
+                ### User Query ###
+                {query}   
+                Sourcefiles : {source_file} | Page Numbers : {page_num}
+                ###PDF TEXT CONTENT :###
+                {pdf_context}
+                
+                ### Base64 Encoded Page Images: ###
+                {base64imgEncoding}
+            """
+        ]
+
+        return content
+
+    content = await contextRet(query)    
 
     grounding_tool = types.Tool(
             google_search = types.GoogleSearch()
@@ -63,7 +95,7 @@ async def logicalanalysis(args: dict ) :
 
     response = client1.models.generate_content(
             model= "gemini-3-flash-preview",
-            contents= query,    
+            contents= content, # type: ignore   
             config = config  
         )
 
