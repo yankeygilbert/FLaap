@@ -1,8 +1,11 @@
 import asyncio
 import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mcp.server.fastmcp import FastMCP
-from Configuration import client1
+from llmConfiguration import client1
 from mcp.server.stdio import stdio_server
 from google.genai import types
 from Rag.EmbeddingsAndVectorStore import context_retrieval

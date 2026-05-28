@@ -1,6 +1,4 @@
 import os
-import io
-import asyncio
 
 from google import genai
 from ollama import chat
@@ -12,7 +10,7 @@ client2 = genai.Client(api_key=os.getenv("Gemini_Api_Key2"))
 client3 = genai.Client(api_key=os.getenv("Gemini_Api_Key3"))
 
 #---Test Connection to Gemini---
-async def Test_Conncection_To_Gemini_1():
+async def Test_Connection_To_Gemini_1():
 
     try:
         Response1 =  client1.models.generate_content(
@@ -25,7 +23,7 @@ async def Test_Conncection_To_Gemini_1():
     except Exception as e:
         print(f'Connection Failed \n Error Details:{e}')
 
-async def Test_Conncection_To_Gemini_2():
+async def Test_Connection_To_Gemini_2():
    
     try:
         Response2 = client2.models.generate_content(
@@ -40,7 +38,7 @@ async def Test_Conncection_To_Gemini_2():
         print(f'Connection Failed \n Error Details:{e}')
  
 
-async def Test_Conncection_To_Gemini_3():
+async def Test_Connection_To_Gemini_3():
    
     try:
         Response3 = client3.models.generate_content(
@@ -56,12 +54,12 @@ async def Test_Conncection_To_Gemini_3():
 
 async def Test_All_Gemini_Connection():
     return [
-            await Test_Conncection_To_Gemini_1(),
-            await Test_Conncection_To_Gemini_2(),
-            await Test_Conncection_To_Gemini_3(),
+            await Test_Connection_To_Gemini_1(),
+            await Test_Connection_To_Gemini_2(),
+            await Test_Connection_To_Gemini_3(),
                 ]
 
-def Test_Conncection_To_Gemma3():
+def Test_Connection_To_Gemma3():
     try:
         response = chat(
             model= 'gemma3:4b',

@@ -1,11 +1,8 @@
-import asyncio
-import io
+import sys
 
 from contextlib import AsyncExitStack
-from typing import TypedDict
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-
 
 #--- Mcp - Client configuration ---#
 class mcpclient:
@@ -19,17 +16,17 @@ class mcpclient:
             server_params = StdioServerParameters(
                 command= 'python3.11',
                 args= [server_path],
-                env= None
+               
             )
-            print("Connecting to Mcp Server")
+            sys.stderr.write(f'Connecting To Server :{self.domain} .....\n')
             stdio_tranport= await self.exit_stack.enter_async_context(stdio_client(server_params))
             self.stdio, self.write = stdio_tranport
             self.session = await self.exit_stack.enter_async_context(ClientSession(self.stdio, self.write))
             await self.session.initialize()
-            print(f'connected To Server :{self.domain}')
+            sys.stderr.write(f'Connected To Server :{self.domain}\n')
         except  Exception as e:
-            print(f'Failed to Connect to Server : {self.domain}')
-            print(f'Error Details {e}')
+            sys.stderr.write(f'Failed to Connect to Server : {self.domain}')
+            sys.stderr.write(f'Error Details {e}')
 
     #--- Tool session configuration ---#
     async def call_analysis(self, tool_name: str, args: dict ):

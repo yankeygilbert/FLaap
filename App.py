@@ -1,7 +1,7 @@
 import asyncio
 
 import streamlit as st
-from Configuration import Test_All_Gemini_Connection, Test_Conncection_To_Gemma3
+from llmConfiguration import Test_All_Gemini_Connection, Test_Connection_To_Gemma3
 from Orchestration import ragembeddings,runAnalysis
 
 st.markdown(
@@ -18,7 +18,7 @@ st.markdown(
 
 with st.spinner("Connecting to LLMS"):
     GeminiConnetions = asyncio.run(Test_All_Gemini_Connection())
-    GemmaConnection = Test_Conncection_To_Gemma3()
+    GemmaConnection = Test_Connection_To_Gemma3()
    
 st.subheader("SYSTEM STATUS")
 
