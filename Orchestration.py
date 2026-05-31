@@ -79,14 +79,14 @@ def promptexpansion(prompt: str) -> str:
 
 #--- Domain Agent Analysis ---#
 async def runAnalysis(prompt: str):
-    Theoretical_Domain = mcpclient("Theoretical")
+    Theoritical_Domain = mcpclient("Theoretical")
     Structural_Domain = mcpclient("Structural")
     Logical_Domain = mcpclient("Logical")
 
     try:
         await asyncio.gather(
-        Theoretical_Domain.connect_to_server("mcp_client_server/Theoreticalserver.py",),
-        Structural_Domain.connect_to_server("mcp_client_server/Strcturalserver.py"),
+        Theoritical_Domain.connect_to_server("mcp_client_server/theoriticalserver.py",),
+        Structural_Domain.connect_to_server("mcp_client_server/Structuralserver.py"),
         Logical_Domain.connect_to_server("mcp_client_server/logicalserver.py")
         )
 
@@ -94,7 +94,7 @@ async def runAnalysis(prompt: str):
         print(f'Connection to Servers failed : status {e}')
     try:
        result =  await asyncio.gather(
-                    Theoretical_Domain.call_analysis("TheoreticalServer", args={"prompt": promptexpansion(prompt)}),
+                    Theoritical_Domain.call_analysis("theoriticalServer", args={"prompt": promptexpansion(prompt)}),
                     Structural_Domain.call_analysis("structuralServer", args={"prompt": promptexpansion(prompt)}),
                     Logical_Domain.call_analysis("logicalServer", args={"prompt": promptexpansion(prompt)})
                      )
@@ -103,7 +103,7 @@ async def runAnalysis(prompt: str):
         
     finally:    
         await asyncio.gather(
-            Theoretical_Domain.close_async_context(),
+            Theoritical_Domain.close_async_context(),
             Structural_Domain.close_async_context(),
             Logical_Domain.close_async_context(),
             return_exceptions= True
@@ -112,7 +112,7 @@ async def runAnalysis(prompt: str):
 
    # --- Gemma Summarizes Results --- #
     try:
-        repsonse: ChatResponse = chat(
+        response: ChatResponse = chat(
             model='gemma3:4b',
             messages=[
                 {
@@ -128,7 +128,7 @@ async def runAnalysis(prompt: str):
         )
 
         ragembeddings(Prompt= repsonse.message.content)#type: ignore
-        return repsonse.message.content
+        return response.message.content
     
     except Exception as e:
         print("failed summarize all Analysis ")

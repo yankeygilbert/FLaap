@@ -19,8 +19,8 @@ class mcpclient:
                
             )
             sys.stderr.write(f'Connecting To Server :{self.domain} .....\n')
-            stdio_tranport= await self.exit_stack.enter_async_context(stdio_client(server_params))
-            self.stdio, self.write = stdio_tranport
+            stdio_transport= await self.exit_stack.enter_async_context(stdio_client(server_params))
+            self.stdio, self.write = stdio_transport
             self.session = await self.exit_stack.enter_async_context(ClientSession(self.stdio, self.write))
             await self.session.initialize()
             sys.stderr.write(f'Connected To Server :{self.domain}\n')

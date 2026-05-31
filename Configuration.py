@@ -1,4 +1,6 @@
 import os
+import sys
+import subprocess
 
 from google import genai
 from ollama import chat
@@ -9,9 +11,21 @@ client1 = genai.Client(api_key = os.getenv("Gemini_Api_Key"))
 client2 = genai.Client(api_key=os.getenv("Gemini_Api_Key2"))
 client3 = genai.Client(api_key=os.getenv("Gemini_Api_Key3"))
 
+#--- Set Up local Resources ---#
+def localResourcesShellSetup():
+    try:
+        result = subprocess.run(
+           ["zsh", "shellScriptConfig.zsh"],
+            text= True,
+            capture_output= True,
+            check= True
+        )
+    except subprocess.CalledProcessError as e:
+        print(f'Failed to Setup Local Resources \n')
+        print(f'Error Details : {e.returncode}', file=sys.stderr)
+
 #---Test Connection to Gemini---
 async def Test_Connection_To_Gemini_1():
-
     try:
         Response1 =  client1.models.generate_content(
             model = "gemini-3-flash-preview",
