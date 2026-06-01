@@ -1,4 +1,3 @@
-import asyncio
 import sys
 import os
 
@@ -64,12 +63,17 @@ async def logicalanalysis(args: dict ) :
     async def contextRet(prompt):
 
         gemmaEmbInstructPfx: str = TheoriticalExtractionQuery.strip() +" User Prompt:"+ prompt
-        contextret = context_retrieval(query_Docs= gemmaEmbInstructPfx)
+        context_ret = context_retrieval(query_docs= gemmaEmbInstructPfx)
         
-        pdf_context= [context.node.text for context in contextret]# type:ignore
-        #page_num = [context.node.metadata.get("page_number") for context in contextret]# type:ignore
-        base64imgEncoding =[context.node.get("full_page_image_b64") for context in contextret] # type:ignore
-        #source_file = [context.node.metadata.get("source_file") for context in contextret]# type:ignore
+        doc_results = context_ret.get("docs", [])
+        memory_results = context_ret.get("memory", [])
+
+        # Extract from docs (text + b64 from Qdrant scroll)
+        pdf_context = [r["text"] for r in doc_results]
+        base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
+
+        # Extract from memory
+        memory_context = [r["text"] for r in memory_results]
 
         content = [ f"""
                 ### User Query ###
@@ -77,32 +81,37 @@ async def logicalanalysis(args: dict ) :
                 
                 ###PDF TEXT CONTENT :###
                 {pdf_context}
-                
+
+                ###Memory context :##
+                {memory_context}
+
                 ### Base64 Encoded Page Images: ###
-                {base64imgEncoding}
+                {base64_images}
             """
         ]
-
         return content
 
     content = await contextRet(query)    
 
-    grounding_tool = types.Tool(
-            google_search = types.GoogleSearch()
-        )
+    try:
+        grounding_tool = types.Tool(
+                google_search = types.GoogleSearch()
+            )
 
-    config = types.GenerateContentConfig(
-        tools = [grounding_tool],
-        system_instruction = systemPrompt    
-        )
+        config = types.GenerateContentConfig(
+            tools = [grounding_tool],
+            system_instruction = systemPrompt    
+            )
 
-    response = client1.models.generate_content(
-            model= "gemini-3-flash-preview",
-            contents= content, # type: ignore   
-            config = config  
-        )
+        response = client1.models.generate_content(
+                model= "gemini-3-flash-preview",
+                contents= content, # type: ignore   
+                config = config  
+            )
 
-    return response.text
+        return response.text
+    except Exception as e:
+        return print(f'Response Error', file=sys.stderr)
 
 if __name__ == "__main__":
     server.run(transport= "stdio")

@@ -19,17 +19,23 @@ PROMPT_EXPANDER_SYSTEM_ROLE = """
     highly detailed prompt. To do this, you must analyze the provided PDF TECHNICAL CONTEXT 
     (which includes raw code, data logs, tables, or structural flowchart markers) and make logical inferences.
     CRITICAL RULES:
+    Do not propose a design but just expand the user query to contain relevant info that will look like a well written problem query
     1. Do NOT answer the user's question.
     2. Infer hidden requirements from the PDF (e.g., if the user asks about an error, find the relevant system component names, variables, or architecture layout in the PDF and include them).
     3. Output ONLY the finalized, expanded prompt text. Do not include introductory text like 'Here is your expanded prompt:'.
 """
 
 # --- Context Retrieval Factory function ---#
-def contextpromptexpansion(contextRet,prompt: str):
-    pdf_context= [context.node.text for context in contextRet]
-    #page_num = [context.node.metadata.get("page_number") for context in contextRet]
-    base64imgEncoding =[context.node.get("full_page_image_b64") for context in contextRet]
-    #source_file = [context.node.metadata.get("source_file") for context in contextRet]
+def contextpromptexpansion(context_ret: dict,prompt: str):
+    doc_results = context_ret.get("docs", [])
+    memory_results = context_ret.get("memory", [])
+
+    # Extract from docs (text + b64 from Qdrant scroll)
+    pdf_context = [r["text"] for r in doc_results]
+    base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
+
+    # Extract from memory
+    memory_context = [r["text"] for r in memory_results]
 
     response: ChatResponse = chat(
         model='gemma3:4b',
@@ -46,9 +52,9 @@ def contextpromptexpansion(contextRet,prompt: str):
                             ### PDF TECHNICAL CONTEXT :
                             Text Content:
                             {pdf_context}
-              
+
                             ###base64 encoded page Image:
-                            {base64imgEncoding}
+                            {base64_images}
 
                             """
                 
@@ -70,8 +76,8 @@ def promptexpansion(prompt: str) -> str:
         or Findings sections. This is for prompt expansion to to address vague prompts. Prompt :
     """
     gemmaEmbInstructPfx: str = Instruction_Prefix.strip()+ " User Prompt: "+ prompt
-    extracted_context = context_retrieval(query_Docs= gemmaEmbInstructPfx)
-    response = contextpromptexpansion(extracted_context,prompt)
+    extracted_context = context_retrieval(query_docs= gemmaEmbInstructPfx)
+    response = contextpromptexpansion(extracted_context,prompt) # type: ignore
 
     return response.strip()
 
@@ -94,7 +100,10 @@ async def runAnalysis(prompt: str):
 
     except Exception as e:
         print(f'Connection to Servers failed : status {e}')
+    
+    result = []
     try:
+       
        result =  await asyncio.gather(
                     Theoritical_Domain.call_analysis("theoriticalServer", args={"prompt": exPrompt}),
                     Structural_Domain.call_analysis("structuralServer", args={"prompt": exPrompt}),
@@ -126,7 +135,6 @@ async def runAnalysis(prompt: str):
                 'content':f"""
                     {result[0]}
                     {result[1]}
-
                     {result[2]}
                 """
             }

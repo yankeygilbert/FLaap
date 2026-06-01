@@ -31,12 +31,11 @@ class files_extractor(BaseReader):
                     text=ocr_text,
                     metadata={
                         "contains_image": True,
-                        "full_page_image_b64": img_b64_str
                     },
                     excluded_embed_metadata_keys=["contains_image", "full_page_image_b64"],
                     excluded_llm_metadata_keys=["contains_image"]
                 )
-                self.image_store[doc.doc_id] = img_b64_str
+                self.image_store[doc.node_id] = img_b64_str
                 documents.append(doc)
         print("Conversion and Extraction Done")
                 

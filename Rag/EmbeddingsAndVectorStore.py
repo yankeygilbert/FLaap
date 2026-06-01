@@ -116,36 +116,56 @@ def EmbbeddingsAndIndexing(prompt: str="", data: list=[], ):
 
 # --- Context Retrieveal ---
 # Implemented For Memory query and Context Data for Analytics agents Query.
-def context_retrieval(query_memory: str= "", query_Docs: str= ""):
-    response = None
-    index = None
+def context_retrieval(query_memory: str = "", query_docs: str = ""):
+    results = {}
 
-    if not query_memory and not query_Docs:
-        print("No inference Prompt provided to retrieve ")
-        return
+    if not query_memory and not query_docs:
+        print("No inference prompt provided to retrieve")
+        return results
 
     if query_memory:
         vec_store = QdrantVectorStore(
-        collection_name= "PromptandResponse",
-        client=  QDrant_Client
+            collection_name="PromptandResponse",
+            client=QDrant_Client
         )
+        index = VectorStoreIndex.from_vector_store(vector_store=vec_store)
+        nodes = index.as_retriever(similarity_top_k=2).retrieve(query_memory) 
+        results["memory"] = [
+            {"score": n.score, "text": n.node.get_content()} for n in nodes
+        ]
 
-        index= VectorStoreIndex.from_vector_store(vector_store= vec_store)
-        
-        response= index.as_retriever(similarity_top_k = 2 )
-        nodes = response.retrieve(query_Docs)
-
-        return nodes
-    
-    if query_Docs:
-        vec_store =QdrantVectorStore(
-            collection_name= "ResearchDocumentation",
-            client= QDrant_Client
+    if query_docs:
+        vec_store = QdrantVectorStore(
+            collection_name="ResearchDocumentation",
+            client=QDrant_Client
         )
+        index = VectorStoreIndex.from_vector_store(vector_store=vec_store)
+        nodes = index.as_retriever(similarity_top_k=2).retrieve(query_docs)
 
-        index= VectorStoreIndex.from_vector_store(vector_store= vec_store)
-        response= index.as_retriever(similarity_top_k = 2 )
-        nodes = response.retrieve(query_Docs)
+        doc_results = []
+        for node in nodes:
+            node_id = node.node.node_id
+            points, _ = QDrant_Client.scroll(
+                collection_name="ResearchDocumentation",
+                scroll_filter=Filter(
+                    must=[FieldCondition(
+                        key="doc_id",
+                        match=MatchValue(value=node_id)
+                    )]
+                ),
+                with_payload=True,
+                limit=1
+            )
+            img_b64 = None
+            if points and points[0].payload:
+                img_b64 = points[0].payload.get("full_page_image_b64")
+            doc_results.append({
+                "score": node.score,
+                "text": node.node.get_content(),
+                "img_b64": img_b64
+            })
 
-        return nodes
+        results["docs"] = doc_results
+
+    return results
 
