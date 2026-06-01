@@ -11,6 +11,8 @@ else
     local killQ=$(lsof -t -i :6333)
 
     if [[ "$killQ" == "" ]]; then
+        open -a Docker
+        sleep 4
         docker run -d -p 6333:6333 -p 6334:6334 \
             -v "$(pwd)/qdrant_storage:/qdrant/storage:z" \
             qdrant/qdrant 

@@ -1,4 +1,5 @@
 import asyncio
+import sys
 
 import streamlit as st
 from Configuration import Test_All_Gemini_Connection, Test_Connection_To_Gemma3, localResourcesShellSetup
@@ -16,20 +17,6 @@ st.markdown(
     unsafe_allow_html= True
 )
 
-with st.spinner("Connecting to LLMS"):
-    localResourcesShellSetup()
-    GeminiConnections = asyncio.run(Test_All_Gemini_Connection())
-    GemmaConnection = Test_Connection_To_Gemma3()
-   
-st.subheader("SYSTEM STATUS")
-
-with st.container(border= True):
-    st.write("LLM & RAG Connection Test")
-    st.metric(label="Gemini1 Status:", value=GeminiConnections[0]) # type: ignore
-    st.metric(label="Gemini2 Status", value=GeminiConnections[1]) # type: ignore
-    st.metric(label="Gemini3 Status", value=GeminiConnections[2]) # type: ignore
-    st.metric(label="Gemma3:4b Status",value=GemmaConnection) # type: ignore
-
 with st.form("Analysis Tool"):
     prompt = st.text_input("Prompt")
 
@@ -40,18 +27,34 @@ with st.form("Analysis Tool"):
     )
     submitted = st.form_submit_button("Analyze")
     if submitted:
+        with st.spinner("Connecting to LLMS"):
+            localResourcesShellSetup()
+            GeminiConnections = asyncio.run(Test_All_Gemini_Connection())
+            GemmaConnection = Test_Connection_To_Gemma3()
+   
+        st.subheader("SYSTEM STATUS")
+
+        with st.container(border= True):
+            st.write("LLM & RAG Connection Test")
+            st.metric(label="Gemini1 Status:", value=GeminiConnections[0]) # type: ignore
+            st.metric(label="Gemini2 Status", value=GeminiConnections[1]) # type: ignore
+            st.metric(label="Gemini3 Status", value=GeminiConnections[2]) # type: ignore
+            st.metric(label="Gemma3:4b Status",value=GemmaConnection) # type: ignore
+            
         if uploaded_files:
-            ragembeddings(Data=uploaded_files)
+            try:
+                result = asyncio.run(ragembeddings(Data=uploaded_files))
+            except Exception as e:
+                print(f'Error with Document upload: {e}')
+            
 
         if not prompt:
             st.error("A prompt is required")
         
         else:
             st.subheader("Analysis Result")
-            async def main():
-                    return await runAnalysis(prompt)
 
             with st.container(border= True):
-                result = asyncio.run(main())  # type: ignore
+                result = asyncio.run(runAnalysis(prompt= prompt))  # type: ignore
                 st.text(result) 
 

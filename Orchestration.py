@@ -8,7 +8,7 @@ from ollama import ChatResponse
 
 
 #--- Function to embed User data and/or Prompt into Qdrant ---#
-def ragembeddings(Prompt: str = "", Data: list =[]):
+async def ragembeddings(Prompt: str = "", Data: list =[]):
 
     EmbbeddingsAndIndexing(prompt=Prompt,data=Data)
 
@@ -27,9 +27,9 @@ PROMPT_EXPANDER_SYSTEM_ROLE = """
 # --- Context Retrieval Factory function ---#
 def contextpromptexpansion(contextRet,prompt: str):
     pdf_context= [context.node.text for context in contextRet]
-    page_num = [context.node.metadata.get("page_number") for context in contextRet]
+    #page_num = [context.node.metadata.get("page_number") for context in contextRet]
     base64imgEncoding =[context.node.get("full_page_image_b64") for context in contextRet]
-    source_file = [context.node.metadata.get("source_file") for context in contextRet]
+    #source_file = [context.node.metadata.get("source_file") for context in contextRet]
 
     response: ChatResponse = chat(
         model='gemma3:4b',
@@ -41,12 +41,9 @@ def contextpromptexpansion(contextRet,prompt: str):
 
             {
                 'role': 'user',
-                'content':[
-                        f""" ### RAW USER QUERY TO EXPAND:
+                'content':f""" ### RAW USER QUERY TO EXPAND:
                                 {prompt}
                             ### PDF TECHNICAL CONTEXT :
-                            Source File {source_file} - Page {page_num}
-                   
                             Text Content:
                             {pdf_context}
               
@@ -54,7 +51,7 @@ def contextpromptexpansion(contextRet,prompt: str):
                             {base64imgEncoding}
 
                             """
-                ]
+                
             }
         ]
     )
@@ -64,6 +61,8 @@ def contextpromptexpansion(contextRet,prompt: str):
     
 #--- Context Retrieval Implementation Functions ---#    
 def promptexpansion(prompt: str) -> str:
+
+    print("Running Prompt Expansion")
 
     Instruction_Prefix = """
         Represent this query for retrieving relevant academic document sections stored as metadata pages(images): 
@@ -76,12 +75,15 @@ def promptexpansion(prompt: str) -> str:
 
     return response.strip()
 
-
 #--- Domain Agent Analysis ---#
 async def runAnalysis(prompt: str):
     Theoritical_Domain = mcpclient("Theoretical")
     Structural_Domain = mcpclient("Structural")
     Logical_Domain = mcpclient("Logical")
+
+    exPrompt = promptexpansion(prompt)
+
+    print(f'Expanded Prompt: \n {exPrompt} \n')
 
     try:
         await asyncio.gather(
@@ -94,9 +96,9 @@ async def runAnalysis(prompt: str):
         print(f'Connection to Servers failed : status {e}')
     try:
        result =  await asyncio.gather(
-                    Theoritical_Domain.call_analysis("theoriticalServer", args={"prompt": promptexpansion(prompt)}),
-                    Structural_Domain.call_analysis("structuralServer", args={"prompt": promptexpansion(prompt)}),
-                    Logical_Domain.call_analysis("logicalServer", args={"prompt": promptexpansion(prompt)})
+                    Theoritical_Domain.call_analysis("theoriticalServer", args={"prompt": exPrompt}),
+                    Structural_Domain.call_analysis("structuralServer", args={"prompt": exPrompt}),
+                    Logical_Domain.call_analysis("logicalServer", args={"prompt": exPrompt})
                      )
     except Exception as e:
         print(f'Something went wrong: Error Details : {e}')
@@ -116,23 +118,27 @@ async def runAnalysis(prompt: str):
             model='gemma3:4b',
             messages=[
                 {
+                    'role':'system',
+                    'content':"Merge all these Responses into One cohessive Response Stictly adhere to what is provided"
+                },
+                {
                 'role': 'user',
-                'content': [
-                    'Merge all these Responses into One cohessive Response Stictly adhere to what is provided',
-                    f'{result[0]}', # type: ignore
-                    f'{result[1]}', # type: ignore
-                    f'{result[2]}'  # type: ignore
-                ]
+                'content':f"""
+                    {result[0]}
+                    {result[1]}
+
+                    {result[2]}
+                """
             }
             ]
         )
 
-        ragembeddings(Prompt= repsonse.message.content)#type: ignore
+        await ragembeddings(Prompt= response.message.content)#type: ignore
         return response.message.content
     
     except Exception as e:
         print("failed summarize all Analysis ")
-        print("Error Details : {e} ")
+        print(f"Error Details : {e} ")
 
         
 

@@ -22,7 +22,7 @@ async def StructuralAnalysis(args: dict ) :
     """
 
     systemPrompt = """
-        You are logical Flaw Anaylsis Specialist In R&D     
+        You are Structural Flaw Anaylsis Specialist In R&D     
         Your Job is to analyse and detection logical flaws in a Design Implementation
         Your role is to examine technical implementations, and identify all logical weaknesses.
         Your analysis must include:
@@ -68,14 +68,14 @@ async def StructuralAnalysis(args: dict ) :
         contextret = context_retrieval(query_Docs= gemmaEmbInstructPfx)
         
         pdf_context= [context.node.text for context in contextret]# type:ignore
-        page_num = [context.node.metadata.get("page_number") for context in contextret]# type:ignore
+       # page_num = [context.node.metadata.get("page_number") for context in contextret]# type:ignore
         base64imgEncoding =[context.node.get("full_page_image_b64") for context in contextret] # type:ignore
-        source_file = [context.node.metadata.get("source_file") for context in contextret]# type:ignore
+       # source_file = [context.node.metadata.get("source_file") for context in contextret]# type:ignore
 
         content = [ f"""
                 ### User Query ###
                 {query}   
-                Sourcefiles : {source_file} | Page Numbers : {page_num}
+                
                 ###PDF TEXT CONTENT :###
                 {pdf_context}
                 

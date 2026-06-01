@@ -20,6 +20,7 @@ def localResourcesShellSetup():
             capture_output= True,
             check= True
         )
+        print(f'Local Resource Setup complete')
     except subprocess.CalledProcessError as e:
         print(f'Failed to Setup Local Resources \n')
         print(f'Error Details : {e.returncode}', file=sys.stderr)
