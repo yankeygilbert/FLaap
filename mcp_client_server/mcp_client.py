@@ -18,7 +18,6 @@ class mcpclient:
                 args= [server_path],
                
             )
-            sys.stderr.write(f'Connecting To Server :{self.domain} .....\n')
             stdio_transport= await self.exit_stack.enter_async_context(stdio_client(server_params))
             self.stdio, self.write = stdio_transport
             self.session = await self.exit_stack.enter_async_context(ClientSession(self.stdio, self.write))
@@ -27,12 +26,15 @@ class mcpclient:
         except  Exception as e:
             sys.stderr.write(f'Failed to Connect to Server : {self.domain}')
             sys.stderr.write(f'Error Details {e}')
+            raise
 
-    #--- Tool session configuration ---#
-    async def call_analysis(self, tool_name: str, args: dict ):
+    #--- Tool call configuration ---#
+    async def call_analysis(self, tool_name: str, tool_args: dict):
         if not self.session:
             raise RuntimeError("Mcp Session not Connected")
-        response = await self.session.call_tool(tool_name,args)
+        response = await self.session.call_tool(tool_name,arguments=tool_args)
+        print(response, file=sys.stderr)
+        return response
 
     #--- existing async context ---#
     async def close_async_context(self):

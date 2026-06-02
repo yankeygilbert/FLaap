@@ -1,20 +1,65 @@
-import asyncio
 import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mcp.server.fastmcp import FastMCP
-from Configuration import client1
+from ddgs import DDGS
 from mcp.server.stdio import stdio_server
-from google.genai import types
 from Rag.EmbeddingsAndVectorStore import context_retrieval
+from ollama import chat
+from ollama import ChatResponse
 
 server = FastMCP("logicalServer")
 
 #--- Analysis Server Tool method with search grounding activated ---#
+ 
+async def contextRet(prompt, web_search):
+        logicalExtractionQuery = """
+        Represent this query for retrieving relevant academic document sections stored as metadata pages(images): 
+        A research paper Implementation, Results, Discussion, Evaluation,
+        or Findings sections containing: experimental setups, software tools, data collection, and procedural frameworks; 
+        participant demographics and sample sizes; and statistical analyses, mathematical models, or performance metrics. 
+        This extraction must capture the empirical boundaries, metric definitions, 
+        and intermediate data outcomes necessary to cross-examine experimental execution against
+        stated hypotheses and detect logical flaws, contradictions, or overgeneralisations
+        """
+        gemmaEmbInstructPfx: str = logicalExtractionQuery.strip() + " User Prompt: "+ prompt
+        context_ret = context_retrieval(query_docs= gemmaEmbInstructPfx)
+        
+        doc_results = context_ret.get("docs", [])
+        memory_results = context_ret.get("memory", [])
+
+        # Extract from docs (text + b64 from Qdrant scroll)
+        pdf_context = [r["text"] for r in doc_results]
+        base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
+
+        # Extract from memory
+        memory_context = [r["text"] for r in memory_results]
+
+        content =  f"""
+                ### User Query ###
+                {prompt}   
+                
+                ### Web Search Results ###
+                {web_search}
+
+                ###PDF TEXT CONTENT :###
+                {pdf_context}
+
+                ###Memory context :###
+                {memory_context}
+
+                ### Base64 Encoded Page Images: ###
+                {base64_images}
+            """
+        
+        return content
+
+#--- MCP Server TooL ---#
 @server.tool(name= "logicalServer")
-async def logicalanalysis(args: dict ) :
+async def logicalanalysis(prompt: str, webres: str) :
+
     """Tool To Perform logical Flaw Analysis
 
         Args:
@@ -50,61 +95,34 @@ async def logicalanalysis(args: dict ) :
         4. Suggested corrections
         If the argument contains no flaws, state explicitly that the implementation is logically correct and explain why.
         """
-   
-    query = args["prompt"]
-
-    logicalExtractionQuery = """
-        Represent this query for retrieving relevant academic document sections stored as metadata pages(images): 
-        A research paper Implementation, Results, Discussion, Evaluation,
-        or Findings sections containing: experimental setups, software tools, data collection, and procedural frameworks; 
-        participant demographics and sample sizes; and statistical analyses, mathematical models, or performance metrics. 
-        This extraction must capture the empirical boundaries, metric definitions, 
-        and intermediate data outcomes necessary to cross-examine experimental execution against
-        stated hypotheses and detect logical flaws, contradictions, or overgeneralisations
-        """
     
-    async def contextRet(prompt):
+    contents = await contextRet(prompt,webres)  
 
-        gemmaEmbInstructPfx: str = logicalExtractionQuery.strip() + " User Prompt: "+ prompt
-        contextret = context_retrieval(query_Docs= gemmaEmbInstructPfx)
-        
-        pdf_context= [context.node.text for context in contextret]# type:ignore
-        page_num = [context.node.metadata.get("page_number") for context in contextret]# type:ignore
-        base64imgEncoding =[context.node.get("full_page_image_b64") for context in contextret] # type:ignore
-        source_file = [context.node.metadata.get("source_file") for context in contextret]# type:ignore
+    try:
+        response: ChatResponse = chat(
+        model='gemma3:4b',
+        messages=[
+            {
+                'role':'system',
+                'content': systemPrompt
+            },
 
-        content = [ f"""
-                ### User Query ###
-                {query}   
-                Sourcefiles : {source_file} | Page Numbers : {page_num}
-                ###PDF TEXT CONTENT :###
-                {pdf_context}
-                
-                ### Base64 Encoded Page Images: ###
-                {base64imgEncoding}
-            """
-        ]
-
-        return content
-
-    content = await contextRet(query)    
-
-    grounding_tool = types.Tool(
-            google_search = types.GoogleSearch()
+            {
+                'role': 'user',
+                'content': contents
+  
+                }
+            ]
         )
+        result = response.message.content
+        return str(result).strip()
+    
+    except Exception as e:
+        sys.stderr.write(f"Something went Wrong : {e}")
 
-    config = types.GenerateContentConfig(
-        tools = [grounding_tool],
-        system_instruction = systemPrompt    
-        )
 
-    response = client1.models.generate_content(
-            model= "gemini-3-flash-preview",
-            contents= content, # type: ignore   
-            config = config  
-        )
-
-    return response.text
+def main():
+    server.run(transport= "stdio") 
 
 if __name__ == "__main__":
-    server.run(transport= "stdio")
+    main()
