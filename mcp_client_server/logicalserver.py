@@ -4,15 +4,17 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mcp.server.fastmcp import FastMCP
-from Configuration import client1
+from ddgs import DDGS
 from mcp.server.stdio import stdio_server
-from google.genai import types
 from Rag.EmbeddingsAndVectorStore import context_retrieval
+from ollama import chat
+from ollama import ChatResponse
 
 server = FastMCP("logicalServer")
 
 #--- Analysis Server Tool method with search grounding activated ---#
-def contextRet(prompt):
+ 
+async def contextRet(prompt, web_search):
         logicalExtractionQuery = """
         Represent this query for retrieving relevant academic document sections stored as metadata pages(images): 
         A research paper Implementation, Results, Discussion, Evaluation,
@@ -35,24 +37,28 @@ def contextRet(prompt):
         # Extract from memory
         memory_context = [r["text"] for r in memory_results]
 
-        content = [ f"""
+        content =  f"""
                 ### User Query ###
                 {prompt}   
                 
+                ### Web Search Results ###
+                {web_search}
+
                 ###PDF TEXT CONTENT :###
                 {pdf_context}
 
-                ###Memory context :##
+                ###Memory context :###
                 {memory_context}
 
                 ### Base64 Encoded Page Images: ###
                 {base64_images}
             """
-        ]
+        
         return content
 
+#--- MCP Server TooL ---#
 @server.tool(name= "logicalServer")
-async def logicalanalysis(prompt: str) :
+async def logicalanalysis(prompt: str, webres: str) :
 
     """Tool To Perform logical Flaw Analysis
 
@@ -90,28 +96,30 @@ async def logicalanalysis(prompt: str) :
         If the argument contains no flaws, state explicitly that the implementation is logically correct and explain why.
         """
     
-    contents = contextRet(prompt)  
+    contents = await contextRet(prompt,webres)  
 
     try:
-        grounding_tool = types.Tool(
-                google_search = types.GoogleSearch()
-            )
+        response: ChatResponse = chat(
+        model='gemma3:4b',
+        messages=[
+            {
+                'role':'system',
+                'content': systemPrompt
+            },
 
-        config = types.GenerateContentConfig(
-            tools = [grounding_tool],
-            system_instruction = systemPrompt    
-            )
-
-        response = client1.models.generate_content(
-                model= "gemini-3-flash-preview",
-                contents= contents, # type: ignore   
-                config = config  
-            )
-
-        return response.text
-    except Exception as e:
-        sys.stderr.write(f'Response Error: {e}\n')
+            {
+                'role': 'user',
+                'content': contents
+  
+                }
+            ]
+        )
+        result = response.message.content
+        return str(result).strip()
     
+    except Exception as e:
+        sys.stderr.write(f"Something went Wrong : {e}")
+
 
 def main():
     server.run(transport= "stdio") 

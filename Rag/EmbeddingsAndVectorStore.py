@@ -108,7 +108,6 @@ def EmbbeddingsAndIndexing(prompt: str="", data: list=[], ):
                             )]
                         )
                     )
-                print(f"Upserted {len(extractor.image_store)} page images into Qdrant")
             else:
                 print(f"Document embedding failed")
         except Exception as e:

@@ -4,15 +4,16 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from mcp.server.fastmcp import FastMCP
-from Configuration import client1
 from mcp.server.stdio import stdio_server
-from google.genai import types
 from Rag.EmbeddingsAndVectorStore import context_retrieval
+from ollama import chat
+from ollama import ChatResponse
+
 
 server = FastMCP("structuralServer")
 
 #--- Analysis Server Tool method with search grounding activated ---#
-def contextRet(prompt):
+async def contextRet(prompt,web_search):
         structuralExtractionQuery = """
             Represent this query for retrieving relevant Research document sections stored as metadata pages(images): 
             A research paper Abstract, Introduction, Methodology, and Experimental Design sections containing: study architectures, 
@@ -35,9 +36,12 @@ def contextRet(prompt):
         # Extract from memory
         memory_context = [r["text"] for r in memory_results]
 
-        content = [ f"""
+        content = f"""
                 ### User Query ###
                 {prompt}   
+
+                ### Web Search Results ###
+                {web_search}
                 
                 ###PDF TEXT CONTENT :###
                 {pdf_context}
@@ -48,13 +52,13 @@ def contextRet(prompt):
                 ### Base64 Encoded Page Images: ###
                 {base64_images}
             """
-        ]
+        
 
         return content
 
 
 @server.tool(name= "structuralServer")
-async def StructuralAnalysis(prompt: str) :
+async def StructuralAnalysis(prompt: str, webres:str) :
     """Tool To Perform logical Flaw Analysis
 
         Args:
@@ -63,8 +67,8 @@ async def StructuralAnalysis(prompt: str) :
 
     systemPrompt = """
         You are Structural Flaw Anaylsis Specialist In R&D     
-        Your Job is to analyse and detection logical flaws in a Design Implementation
-        Your role is to examine technical implementations, and identify all logical weaknesses.
+        Your Job is to analyse and detection structural flaws in a Design Implementation
+        Your role is to examine technical implementations, and identify all structural weaknesses.
         Your analysis must include:
         Explicit contradictions
         Implicit contradictions
@@ -91,30 +95,35 @@ async def StructuralAnalysis(prompt: str) :
         If the argument contains no flaws, state explicitly that the implementation is logically correct and explain why.
         """
     
-    contents = contextRet(prompt)
+    
+
+    contents = await contextRet(prompt,webres)  
+
     try:
-        grounding_tool = types.Tool(
-                google_search = types.GoogleSearch()
-            )
+        response: ChatResponse = chat(
+        model='gemma3:4b',
+        messages=[
+            {
+                'role':'system',
+                'content': systemPrompt
+            },
 
-        config = types.GenerateContentConfig(
-            tools = [grounding_tool],
-            system_instruction = systemPrompt    
-            )
-
-        response = client1.models.generate_content(
-                model= "gemini-3-flash-preview",
-                contents= contents, # type: ignore   
-                config = config  
-            )
-
-        return response.text
+            {
+                'role': 'user',
+                'content': contents
+  
+                }
+            ]
+        )
+        result = response.message.content
+        return str(result).strip()
+    
     except Exception as e:
-        return print(f'Response Error', file=sys.stderr)
+        sys.stderr.write(f"Something went Wrong : {e}")
+
 
 def main():
     server.run(transport= "stdio") 
 
 if __name__ == "__main__":
     main()
-

@@ -2,9 +2,9 @@ import asyncio
 
 from mcp_client_server.mcp_client import mcpclient
 from Rag.EmbeddingsAndVectorStore import context_retrieval, EmbbeddingsAndIndexing
-from llama_index.llms.ollama import Ollama
 from ollama import chat
 from ollama import ChatResponse
+from Rag.websearch import web_search
 
 
 #--- Function to embed User data and/or Prompt into Qdrant ---#
@@ -29,14 +29,10 @@ PROMPT_EXPANDER_SYSTEM_ROLE = """
 # --- Context Retrieval Factory function ---#
 def contextpromptexpansion(context_ret: dict,prompt: str):
     doc_results = context_ret.get("docs", [])
-    memory_results = context_ret.get("memory", [])
-
+  
     # Extract from docs (text + b64 from Qdrant scroll)
     pdf_context = [r["text"] for r in doc_results]
     base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
-
-    # Extract from memory
-    memory_context = [r["text"] for r in memory_results]
 
     response: ChatResponse = chat(
         model='gemma3:4b',
@@ -104,11 +100,11 @@ async def runAnalysis(prompt: str):
     
     result = []
     try:
-       
+       webresult = await web_search(exPrompt)
        result =  await asyncio.gather(
-                    Theoritical_Domain.call_analysis("theoriticalServer", {"prompt": exPrompt}),
-                    Structural_Domain.call_analysis("structuralServer", {"prompt": exPrompt}),
-                    Logical_Domain.call_analysis("logicalServer", {"prompt": exPrompt})
+                    Theoritical_Domain.call_analysis("theoriticalServer", {"prompt": exPrompt, "webres":webresult}),
+                    Structural_Domain.call_analysis("structuralServer", {"prompt": exPrompt,"webres":webresult}),
+                    Logical_Domain.call_analysis("logicalServer", {"prompt": exPrompt,"webres":webresult})
                      )
     except Exception as e:
         print(f'Something went wrong: Error Details : {e}')
