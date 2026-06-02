@@ -39,7 +39,8 @@ with st.form("Analysis Tool"):
 
         if uploaded_files:
             try:
-                result = asyncio.run(ragembeddings(Data=uploaded_files))
+                with st.spinner("Processing And Embedding Data"):
+                    result = asyncio.run(ragembeddings(Data=uploaded_files))
             except Exception as e:
                 print(f'Error with Document upload: {e}')
             
@@ -51,6 +52,7 @@ with st.form("Analysis Tool"):
             st.subheader("Analysis Result")
 
             with st.container(border= True):
-                result = asyncio.run(runAnalysis(prompt= prompt))  # type: ignore
-                st.text(result) 
+                with st.spinner("Running Analytics"):
+                    result = asyncio.run(runAnalysis(prompt= prompt))  # type: ignore
+                    st.text(result) 
 
