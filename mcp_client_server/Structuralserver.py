@@ -12,8 +12,49 @@ from Rag.EmbeddingsAndVectorStore import context_retrieval
 server = FastMCP("structuralServer")
 
 #--- Analysis Server Tool method with search grounding activated ---#
+def contextRet(prompt):
+        structuralExtractionQuery = """
+            Represent this query for retrieving relevant Research document sections stored as metadata pages(images): 
+            A research paper Abstract, Introduction, Methodology, and Experimental Design sections containing: study architectures, 
+            sampling strategies, variable operationalisation, control frameworks, and procedural steps. 
+            This extraction must capture the organizational logic, workflow boundaries, 
+            and data collection protocols necessary to detect structural flaws, 
+            such as missing control groups, variables left unmeasured, data collection gaps, and systemic design-to-hypothesis mismatches
+            """
+         
+        gemmaEmbInstructPfx: str = structuralExtractionQuery.strip() +" User Prompt:"+prompt
+        context_ret = context_retrieval(query_docs= gemmaEmbInstructPfx)
+        
+        doc_results = context_ret.get("docs", [])
+        memory_results = context_ret.get("memory", [])
+
+        # Extract from docs (text + b64 from Qdrant scroll)
+        pdf_context = [r["text"] for r in doc_results]
+        base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
+
+        # Extract from memory
+        memory_context = [r["text"] for r in memory_results]
+
+        content = [ f"""
+                ### User Query ###
+                {prompt}   
+                
+                ###PDF TEXT CONTENT :###
+                {pdf_context}
+
+                ###Memory context :##
+                {memory_context}
+
+                ### Base64 Encoded Page Images: ###
+                {base64_images}
+            """
+        ]
+
+        return content
+
+
 @server.tool(name= "structuralServer")
-async def StructuralAnalysis(args: dict ) :
+async def StructuralAnalysis(prompt: str) :
     """Tool To Perform logical Flaw Analysis
 
         Args:
@@ -49,52 +90,8 @@ async def StructuralAnalysis(args: dict ) :
         4. Suggested corrections
         If the argument contains no flaws, state explicitly that the implementation is logically correct and explain why.
         """
-   
-    query = args["prompt"]
-
-    structuralExtractionQuery = """
-        Represent this query for retrieving relevant Research document sections stored as metadata pages(images): 
-        A research paper Abstract, Introduction, Methodology, and Experimental Design sections containing: study architectures, 
-        sampling strategies, variable operationalisation, control frameworks, and procedural steps. 
-        This extraction must capture the organizational logic, workflow boundaries, 
-        and data collection protocols necessary to detect structural flaws, 
-        such as missing control groups, variables left unmeasured, data collection gaps, and systemic design-to-hypothesis mismatches
-        """
-
-    async def contextRet(prompt):
-
-        gemmaEmbInstructPfx: str = structuralExtractionQuery.strip() +" User Prompt:"+prompt
-        context_ret = context_retrieval(query_docs= gemmaEmbInstructPfx)
-        
-        doc_results = context_ret.get("docs", [])
-        memory_results = context_ret.get("memory", [])
-
-        # Extract from docs (text + b64 from Qdrant scroll)
-        pdf_context = [r["text"] for r in doc_results]
-        base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
-
-        # Extract from memory
-        memory_context = [r["text"] for r in memory_results]
-
-        content = [ f"""
-                ### User Query ###
-                {query}   
-                
-                ###PDF TEXT CONTENT :###
-                {pdf_context}
-
-                ###Memory context :##
-                {memory_context}
-
-                ### Base64 Encoded Page Images: ###
-                {base64_images}
-            """
-        ]
-
-        return content
-
-    content = await contextRet(query)    
-
+    
+    contents = contextRet(prompt)
     try:
         grounding_tool = types.Tool(
                 google_search = types.GoogleSearch()
@@ -107,7 +104,7 @@ async def StructuralAnalysis(args: dict ) :
 
         response = client1.models.generate_content(
                 model= "gemini-3-flash-preview",
-                contents= content, # type: ignore   
+                contents= contents, # type: ignore   
                 config = config  
             )
 
@@ -115,6 +112,9 @@ async def StructuralAnalysis(args: dict ) :
     except Exception as e:
         return print(f'Response Error', file=sys.stderr)
 
+def main():
+    server.run(transport= "stdio") 
+
 if __name__ == "__main__":
-    server.run(transport= "stdio")
+    main()
 

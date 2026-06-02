@@ -18,6 +18,7 @@ PROMPT_EXPANDER_SYSTEM_ROLE = """
     Your sole task is to rewrite, enrich, and expand the user's brief query into a comprehensive, 
     highly detailed prompt. To do this, you must analyze the provided PDF TECHNICAL CONTEXT 
     (which includes raw code, data logs, tables, or structural flowchart markers) and make logical inferences.
+    The Expanded prompt should be a user describing a problem he is facing clearly defining the technical Problem inferred from the user prompt.
     CRITICAL RULES:
     Do not propose a design but just expand the user query to contain relevant info that will look like a well written problem query
     1. Do NOT answer the user's question.
@@ -105,9 +106,9 @@ async def runAnalysis(prompt: str):
     try:
        
        result =  await asyncio.gather(
-                    Theoritical_Domain.call_analysis("theoriticalServer", args={"prompt": exPrompt}),
-                    Structural_Domain.call_analysis("structuralServer", args={"prompt": exPrompt}),
-                    Logical_Domain.call_analysis("logicalServer", args={"prompt": exPrompt})
+                    Theoritical_Domain.call_analysis("theoriticalServer", {"prompt": exPrompt}),
+                    Structural_Domain.call_analysis("structuralServer", {"prompt": exPrompt}),
+                    Logical_Domain.call_analysis("logicalServer", {"prompt": exPrompt})
                      )
     except Exception as e:
         print(f'Something went wrong: Error Details : {e}')

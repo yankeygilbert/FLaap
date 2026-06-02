@@ -11,8 +11,46 @@ from Rag.EmbeddingsAndVectorStore import context_retrieval
 server = FastMCP("theoriticalServer")
 
 #--- Analysis Server Tool method with search grounding activated ---#
+def contextRet(prompt):
+        TheoriticalExtractionQuery = """
+        Represent this query for retrieving relevant academic document sections stored as metadata pages(images): 
+        A research paper Abstract, Introduction, Background, Literature Review, and Discussion sections containing: 
+        primary hypotheses, foundational premises, axiomatic assumptions, causal mechanisms, and conceptual frameworks. 
+        This extraction must capture the core deductive reasoning, axiomatic boundaries, 
+        and theoretical paradigms necessary to detect theoretical flaws, such as circular reasoning, unbacked conceptual leaps, 
+        flawed premises, and invalid causal claims.
+        """
+        gemmaEmbInstructPfx: str = TheoriticalExtractionQuery.strip() +" User Prompt:"+ prompt
+        context_ret = context_retrieval(query_docs= gemmaEmbInstructPfx)
+        
+        doc_results = context_ret.get("docs", [])
+        memory_results = context_ret.get("memory", [])
+
+        # Extract from docs (text + b64 from Qdrant scroll)
+        pdf_context = [r["text"] for r in doc_results]
+        base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
+
+        # Extract from memory
+        memory_context = [r["text"] for r in memory_results]
+
+        content = [ f"""
+                ### User Query ###
+                {prompt}   
+                
+                ###PDF TEXT CONTENT :###
+                {pdf_context}
+
+                ###Memory context :##
+                {memory_context}
+
+                ### Base64 Encoded Page Images: ###
+                {base64_images}
+            """
+        ]
+        return content
+
 @server.tool(name="theoriticalServer")
-async def logicalanalysis(args: dict ) :
+async def theoriticalanalysis(prompt: str ) :
     """Tool To Perform logical Flaw Analysis
 
         Args:
@@ -49,49 +87,7 @@ async def logicalanalysis(args: dict ) :
         If the argument contains no flaws, state explicitly that the implementation is logically correct and explain why.
         """
    
-    query = args["prompt"]
-
-    TheoriticalExtractionQuery = """
-        Represent this query for retrieving relevant academic document sections stored as metadata pages(images): 
-        A research paper Abstract, Introduction, Background, Literature Review, and Discussion sections containing: 
-        primary hypotheses, foundational premises, axiomatic assumptions, causal mechanisms, and conceptual frameworks. 
-        This extraction must capture the core deductive reasoning, axiomatic boundaries, 
-        and theoretical paradigms necessary to detect theoretical flaws, such as circular reasoning, unbacked conceptual leaps, 
-        flawed premises, and invalid causal claims.
-        """
-
-    async def contextRet(prompt):
-
-        gemmaEmbInstructPfx: str = TheoriticalExtractionQuery.strip() +" User Prompt:"+ prompt
-        context_ret = context_retrieval(query_docs= gemmaEmbInstructPfx)
-        
-        doc_results = context_ret.get("docs", [])
-        memory_results = context_ret.get("memory", [])
-
-        # Extract from docs (text + b64 from Qdrant scroll)
-        pdf_context = [r["text"] for r in doc_results]
-        base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
-
-        # Extract from memory
-        memory_context = [r["text"] for r in memory_results]
-
-        content = [ f"""
-                ### User Query ###
-                {query}   
-                
-                ###PDF TEXT CONTENT :###
-                {pdf_context}
-
-                ###Memory context :##
-                {memory_context}
-
-                ### Base64 Encoded Page Images: ###
-                {base64_images}
-            """
-        ]
-        return content
-
-    content = await contextRet(query)    
+    contents = contextRet(prompt)    
 
     try:
         grounding_tool = types.Tool(
@@ -105,7 +101,7 @@ async def logicalanalysis(args: dict ) :
 
         response = client1.models.generate_content(
                 model= "gemini-3-flash-preview",
-                contents= content, # type: ignore   
+                contents= contents, # type: ignore   
                 config = config  
             )
 
@@ -113,5 +109,8 @@ async def logicalanalysis(args: dict ) :
     except Exception as e:
         return print(f'Response Error', file=sys.stderr)
 
+def main():
+    server.run(transport= "stdio") 
+
 if __name__ == "__main__":
-    server.run(transport= "stdio")
+    main()
