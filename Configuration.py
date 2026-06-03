@@ -36,7 +36,7 @@ def Test_Connection_To_Gemma3():
         )
 
         print(f'Connection to Gemma3:4b Local Status {response.message.content}')
-        return response .message.content# type: ignore
+        return response.message.content# type: ignore
     except Exception as e:
         print(f'Connection Failed \n Error Details:{e}')
     

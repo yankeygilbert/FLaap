@@ -15,7 +15,7 @@ import sys
 
 import streamlit as st
 from Configuration import Test_Connection_To_Gemma3, localResourcesShellSetup
-from Orchestration import ragembeddings,runAnalysis
+from Orchestration import ragembeddings,runAnalysis,promptexpansion
 from Evaluation import Evaluation
 
 st.markdown(
@@ -66,13 +66,19 @@ with st.form("Analysis Tool"):
 
             with st.container(border= True):
                 with st.spinner("Running Analytics"):
-                    result = asyncio.run(runAnalysis(prompt= prompt))  # type: ignore
-                    final_result = Evaluation(result[1], result[0]) # type: ignore
-                    fresult = final_result #type: ignore
-                    if fresult >= 7:
-                        st.text(result[0].strip())
+                    
+                    exPrompt = promptexpansion(prompt) # Call Prompt expansion Implementation Function
+                    print(f'Expanded Prompt: \n {exPrompt} \n')
+
+                    result = asyncio.run(runAnalysis(prompt= exPrompt))  # type: ignore
+                    evl_result = Evaluation(result, exPrompt) # type: ignore
+                    
+                    if evl_result >= 7:
+                        st.text(result)
+                        await ragembeddings(Prompt= response.message.content)#type: ignore
                     else:
                        result = asyncio.run(runAnalysis(prompt= prompt))    
-                       st.text(result[0].strip())
+                       st.text(result)
+                       await ragembeddings(Prompt= response.message.content)#type: ignore
                      
 

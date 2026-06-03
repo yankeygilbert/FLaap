@@ -2,7 +2,7 @@ from Orchestration import runAnalysis, ragembeddings
 from ollama import chat
 from ollama import ChatResponse
 
-def Evaluation(prompt,response):
+def Evaluation(response,prompt):
     result: str =""
     try:
         systemPrompt= """

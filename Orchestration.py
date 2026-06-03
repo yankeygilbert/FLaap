@@ -101,17 +101,12 @@ def promptexpansion(prompt: str) -> str:
 
     return response.strip()
 
-
 #--- Domain Agent Analysis ---#
 async def runAnalysis(prompt: str):
     # Set up MCP clients to all three MCP servers
     Theoritical_Domain = mcpclient("Theoretical")
     Structural_Domain = mcpclient("Structural")
     Logical_Domain = mcpclient("Logical")
-
-    exPrompt = promptexpansion(prompt) # Call Prompt expansion Implementation Function
-
-    print(f'Expanded Prompt: \n {exPrompt} \n')
 
     #Connect To MCP Servers 
     try:
@@ -127,11 +122,11 @@ async def runAnalysis(prompt: str):
     #Call MCP server Anlaytics tools with expanded Prompt and Web Search results
     result = []
     try:
-       webresult = await web_search(exPrompt)
+       webresult = await web_search(prompt)
        result =  await asyncio.gather(
-                    Theoritical_Domain.call_analysis("theoriticalServer", {"prompt": exPrompt, "webres":webresult}),
-                    Structural_Domain.call_analysis("structuralServer", {"prompt": exPrompt,"webres":webresult}),
-                    Logical_Domain.call_analysis("logicalServer", {"prompt": exPrompt,"webres":webresult})
+                    Theoritical_Domain.call_analysis("theoriticalServer", {"prompt": prompt, "webres":webresult}),
+                    Structural_Domain.call_analysis("structuralServer", {"prompt": prompt,"webres":webresult}),
+                    Logical_Domain.call_analysis("logicalServer", {"prompt": prompt,"webres":webresult})
                      )
     except Exception as e:
         print(f'Something went wrong: Error Details : {e}')
@@ -148,7 +143,7 @@ async def runAnalysis(prompt: str):
 
    # --- Gemma Summarizes Results --- #
     response = "" #type: ignore
-    resResult: list =[]
+    
     try:
         response: ChatResponse = chat(
             model='gemma3:4b',
@@ -167,12 +162,11 @@ async def runAnalysis(prompt: str):
             }
             ]
         )
-        resResult = [response.message.content,exPrompt]
-        return resResult
+        return str(response.message.content).strip()
     except Exception as e:
         print("failed summarize all Analysis ")
         print(f"Error Details : {e} ")
-        return []
+        return
 
 
         
