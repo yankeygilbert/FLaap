@@ -1,3 +1,13 @@
+
+"""
+                       ---- Document Processor ----
+    This Program Implements the Extraction of text and conversion of PDF Research documentation into
+    Images to be stored in Qdrant.
+
+    NB:  Only extracted text is vectorized. Image blobs are compressed using base64 enconding and stored as 
+    a metadata payload in Qdrant using the Qdrant scroll api.
+                
+"""
 import io
 import os
 import base64
@@ -9,16 +19,16 @@ from llama_index.core.readers.base import BaseReader
 
 class files_extractor(BaseReader):
     def __init__(self):
-        self.image_store = {}
+        self.image_store = {} 
 
     def load_data(self, file_path: str, extra_info=None) -> list[Document]:
         """Callback function used by SimpleDirectoryReader to parse PDFs as images."""
         print("Converting Pages to Images and Extracting Text Content")
-        pages = convert_from_path(file_path, dpi=300)
+        pages = convert_from_path(file_path, dpi=300) # convert pdf pages to images
         documents = []
 
         for page_num, page_image in enumerate(pages):
-            # OCR the text
+            # Extract the text from images
             ocr_text = pytesseract.image_to_string(page_image)
             
             # Base64 compress the visual page image for the Qdrant Payload
@@ -26,6 +36,7 @@ class files_extractor(BaseReader):
             page_image.save(buffered, format="JPEG", quality=90)
             img_b64_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
             
+            # set Up llama Index Document append extracted text, compressed Images go to "self.image_store".
             if ocr_text.strip():
                 doc = Document(
                     text=ocr_text,

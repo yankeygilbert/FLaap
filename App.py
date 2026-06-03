@@ -1,3 +1,15 @@
+"""
+    App.py is the entry point for the For the Application using streamlit
+    Stages:
+        1. Setting up configurations :
+            Local dependecies ie. Ollama running gemmaembeddings, Gemma3:4b, docker, Qdrant  is configured and span up. 
+            configuration script can be found in "shellScriptConfig.zsh"
+        2. Running Orchestrator:
+            Managements Rag System and communication between Rag and LLM and MCP servers is handled by the Orchestrator Engine
+            The orchestrator runs three MCP clients that connects to all MCP servers and also coordinates processes between Rag system
+            an all other components of the entire architecture.
+          
+"""
 import asyncio
 import sys
 

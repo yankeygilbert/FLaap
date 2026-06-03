@@ -1,3 +1,9 @@
+"""Tool To Perform logical Flaw Analysis
+
+        Args:
+            prompt: A user Prompt and Web search result
+"""
+
 import sys
 import os
 
@@ -105,11 +111,10 @@ async def theoriticalanalysis(prompt: str, webres:str ) :
 
                     If the implementation contains no theoretical weaknesses, state explicitly that the implementation is theoretically sound and explain why.
                     """
-   
-    
 
-    contents = await contextRet(prompt,webres)  
+    contents = await contextRet(prompt,webres) 
 
+# Call to Gemma to Reason on context and Prompt
     try:
         response: ChatResponse = chat(
         model='gemma3:4b',

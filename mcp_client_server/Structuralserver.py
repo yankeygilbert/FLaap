@@ -1,3 +1,9 @@
+
+"""Tool To Perform logical Flaw Analysis
+
+        Args:
+            prompt: A user Prompt and Web search Results
+"""
 import sys
 import os
 
@@ -62,7 +68,7 @@ async def StructuralAnalysis(prompt: str, webres:str) :
     """Tool To Perform logical Flaw Analysis
 
         Args:
-            prompt: A user Prompt
+            prompt: A user Prompt and Web search Results
     """
 
     systemPrompt = """
@@ -104,6 +110,8 @@ async def StructuralAnalysis(prompt: str, webres:str) :
     
 
     contents = await contextRet(prompt,webres)  
+
+    # Call to Gemma to Reason on context and Prompt
 
     try:
         response: ChatResponse = chat(

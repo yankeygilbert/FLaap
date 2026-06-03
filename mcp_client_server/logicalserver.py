@@ -1,3 +1,9 @@
+"""Tool To Perform logical Flaw Analysis
+
+        Args:
+            prompt: A user Prompt and web search results
+"""
+
 import sys
 import os
 
@@ -103,6 +109,7 @@ async def logicalanalysis(prompt: str, webres: str) :
     
     contents = await contextRet(prompt,webres)  
 
+    # Call to Gemma to Reason on context and Prompt
     try:
         response: ChatResponse = chat(
         model='gemma3:4b',

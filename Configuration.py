@@ -22,7 +22,7 @@ def localResourcesShellSetup():
         print(f'Failed to Setup Local Resources \n')
         print(f'Error Details : {e.returncode}', file=sys.stderr)
 
-
+#--- Test Connection to Gemma3:4b ---#
 def Test_Connection_To_Gemma3():
     try:
         response = chat(
