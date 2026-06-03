@@ -147,6 +147,8 @@ async def runAnalysis(prompt: str):
 
 
    # --- Gemma Summarizes Results --- #
+    response = "" #type: ignore
+    resResult: list =[]
     try:
         response: ChatResponse = chat(
             model='gemma3:4b',
@@ -165,13 +167,15 @@ async def runAnalysis(prompt: str):
             }
             ]
         )
-
-        await ragembeddings(Prompt= response.message.content)#type: ignore
-        return response.message.content
-    
+        resResult = [response.message.content,exPrompt]
+        return resResult
     except Exception as e:
         print("failed summarize all Analysis ")
         print(f"Error Details : {e} ")
+        return []
+
+
+        
 
         
 
