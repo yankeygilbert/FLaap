@@ -133,8 +133,7 @@ async def theoriticalanalysis(prompt: str, webres:str, EvlScore: str) :
                 }
             ]
         )
-        result = response.message.content
-        return str(result).strip()
+        return str(response.message.content).strip()
     
     except Exception as e:
         sys.stderr.write(f"Something went Wrong : {e}")
