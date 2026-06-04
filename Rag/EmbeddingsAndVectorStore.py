@@ -113,7 +113,7 @@ def EmbbeddingsAndIndexing(prompt: str="", data: list=[], ):
         except Exception as e:
             print(f"Document embedding failed: {e}")
 
-# --- Context Retrieveal ---
+# --- Context Retrieval ---
 # Implemented For Memory query and Context Data for Analytics agents Query.
 def context_retrieval(query_memory: str = "", query_docs: str = ""):
     results = {}

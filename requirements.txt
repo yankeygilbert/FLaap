@@ -1,0 +1,10 @@
+ddgs==9.14.4
+fitz==0.0.1.dev2
+llama_index==0.14.22
+mcp==1.27.2
+ollama==0.6.2
+pdf2image==1.17.0
+pytesseract==0.3.13
+python-dotenv==1.2.2
+qdrant_client==1.18.0
+streamlit==1.57.0

@@ -1,3 +1,9 @@
+
+"""Tool To Perform logical Flaw Analysis
+
+        Args:
+            prompt: A user Prompt and Web search Results
+"""
 import sys
 import os
 
@@ -13,7 +19,7 @@ from ollama import ChatResponse
 server = FastMCP("structuralServer")
 
 #--- Analysis Server Tool method with search grounding activated ---#
-async def contextRet(prompt,web_search):
+async def contextRet(prompt: str, webres:str,EvlScore: str):
         structuralExtractionQuery = """
             Represent this query for retrieving relevant Research document sections stored as metadata pages(images): 
             A research paper Abstract, Introduction, Methodology, and Experimental Design sections containing: study architectures, 
@@ -37,11 +43,13 @@ async def contextRet(prompt,web_search):
         memory_context = [r["text"] for r in memory_results]
 
         content = f"""
+                ###Analytics Evaluation Score: IF "None" means Generate First original Analytics, IF < 7 means Improve Previous Analytics to meet users request###
+                    Evaluation Score: {EvlScore}
                 ### User Query ###
                 {prompt}   
 
                 ### Web Search Results ###
-                {web_search}
+                {webres}
                 
                 ###PDF TEXT CONTENT :###
                 {pdf_context}
@@ -58,46 +66,54 @@ async def contextRet(prompt,web_search):
 
 
 @server.tool(name= "structuralServer")
-async def StructuralAnalysis(prompt: str, webres:str) :
+async def StructuralAnalysis(prompt: str, webres:str,EvlScore: str) :
     """Tool To Perform logical Flaw Analysis
 
         Args:
-            prompt: A user Prompt
+            prompt: A user Prompt and Web search Results
     """
 
     systemPrompt = """
-        You are Structural Flaw Anaylsis Specialist In R&D     
-        Your Job is to analyse and detection structural flaws in a Design Implementation
-        Your role is to examine technical implementations, and identify all structural weaknesses.
-        Your analysis must include:
-        Explicit contradictions
-        Implicit contradictions
-        Invalid inferences
-        Ambiguity or vagueness
-        Category errors
-        False equivalences
-        Missing premises
-        Overgeneralisation
-        Nonsequitur reasoning
-        For every flaw you detect, you must:
-        Name the flaw
-        Quote the exact part of the implementation that contains it
-        Explain why it is a flaw
-        Suggest how the reasoning could be corrected
-        You must be precise, rigorous, and exhaustive.
-        You do not rewrite the argument; you only analyse it.
-        You do not soften your critique; you prioritise correctness over politeness.
-        Your output format must be:
-        1. Summary of overall reasoning quality  
-        2. detected flaws  
-        3. Explanation of each flaw  
-        4. Suggested corrections
-        If the argument contains no flaws, state explicitly that the implementation is logically correct and explain why.
-        """
+                You are a Structural Analysis Specialist in R&D.
+
+                Your job is to analyse the structure of a design implementation.
+                Focus on how the implementation is organised, connected, sequenced, and operationalised.
+
+                You must check for:
+                - Missing design components
+                - Poor workflow sequence
+                - Unclear dependencies
+                - Weak architecture
+                - Incomplete methodology steps
+                - Missing control variables
+                - Poor variable operationalisation
+                - Inconsistent implementation structure
+                - Missing procedural details
+
+                For every structural issue you detect, you must:
+                1. Name the structural issue
+                2. Quote the exact part of the implementation that contains it
+                3. Explain why it weakens the implementation
+                4. Suggest how the structure could be improved
+
+                Do not analyse logical reasoning flaws unless they directly affect the implementation structure.
+
+                Your output format must be:
+                1. Summary of structural quality
+                2. Detected structural issues
+                3. Explanation of each issue
+                4. Suggested corrections
+
+                If the implementation has no structural issues, state clearly that the implementation is structurally sound and explain why.
+                """
+        
+        
     
     
 
-    contents = await contextRet(prompt,webres)  
+    contents = await contextRet(prompt,webres,EvlScore)  
+
+    # Call to Gemma to Reason on context and Prompt
 
     try:
         response: ChatResponse = chat(
@@ -115,8 +131,7 @@ async def StructuralAnalysis(prompt: str, webres:str) :
                 }
             ]
         )
-        result = response.message.content
-        return str(result).strip()
+        return str(response.message.content).strip()
     
     except Exception as e:
         sys.stderr.write(f"Something went Wrong : {e}")

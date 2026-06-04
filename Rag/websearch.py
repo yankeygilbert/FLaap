@@ -1,9 +1,15 @@
+
+"""
+      Web search Implementation Using DUCKDUCKGO 
+"""
 import sys
 
 from ddgs import DDGS
 
 async def web_search(prompt: str):
      combined_results =""
+
+     #Targeted Sites
      search_sites= {
           "github": f"site:github.com {prompt}",
           "stackoverflow": f"site:stackoverflow.com {prompt}",

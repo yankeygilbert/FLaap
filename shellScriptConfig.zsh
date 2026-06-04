@@ -32,7 +32,7 @@ if curl --silent --fail --max-time 4 "$ollamaStatus" &> /dev/null; then
     echo "Ollama Server Up and Running"
 
 else
-    local killO=lsof -t -i :11434
+    local killO=$(lsof -t -i :11434)
 
     if [[ "$killO" == "" ]]; then
         ollama serve

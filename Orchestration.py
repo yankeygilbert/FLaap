@@ -1,3 +1,25 @@
+"""
+                       ---- Orchestrator Engine ----
+    This Engine Acts as the main brain of the Failure Analysis Agent.
+    Functions:
+        1.Receive User input and pass them to the Rag embedding and document processing layer to perform 
+        required embeddings and document processing task.
+
+        2. Perform User Prompt expansion by retrieving data from the Rag system and passing that data along side
+        a system prompt to Gemma3:4b to expand user prompt into a more detailed prompt for analytics Engines to 
+        work with.
+
+        3. Receive the expanded prompt and set up MCP client connections to the three analytics Servers.
+
+        4. Perform a web search on targeted sites ie. github, arxiv,stackoverflow etc and extract relevant context 
+        to user prompt.
+
+        5. Pass the web search result and expanded prompt to the Analytics Servers through the instantiated MCP clients
+        
+        6. Receive the results from all three analytics and pass it to Gemma3:4b to perform an aggregation and return 
+        the final output result.
+"""
+
 import asyncio
 
 from mcp_client_server.mcp_client import mcpclient
@@ -26,14 +48,15 @@ PROMPT_EXPANDER_SYSTEM_ROLE = """
     3. Output ONLY the finalized, expanded prompt text. Do not include introductory text like 'Here is your expanded prompt:'.
 """
 
-# --- Context Retrieval Factory function ---#
+# --- Context Retrieval From Rag function definition ---#
 def contextpromptexpansion(context_ret: dict,prompt: str):
     doc_results = context_ret.get("docs", [])
   
-    # Extract from docs (text + b64 from Qdrant scroll)
+    # Extract from docs (text + b64 image encoding from Qdrant )
     pdf_context = [r["text"] for r in doc_results]
     base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
 
+    #Pass context retrieved to gemma3:4b for prompt expansion
     response: ChatResponse = chat(
         model='gemma3:4b',
         messages=[
@@ -79,15 +102,13 @@ def promptexpansion(prompt: str) -> str:
     return response.strip()
 
 #--- Domain Agent Analysis ---#
-async def runAnalysis(prompt: str):
+async def runAnalysis(prompt: str, EvalScore: str = "None"):
+    # Set up MCP clients to all three MCP servers
     Theoritical_Domain = mcpclient("Theoretical")
     Structural_Domain = mcpclient("Structural")
     Logical_Domain = mcpclient("Logical")
 
-    exPrompt = promptexpansion(prompt)
-
-    print(f'Expanded Prompt: \n {exPrompt} \n')
-
+    #Connect To MCP Servers 
     try:
         await asyncio.gather(
         Theoritical_Domain.connect_to_server("mcp_client_server/theoriticalserver.py",),
@@ -98,18 +119,20 @@ async def runAnalysis(prompt: str):
     except Exception as e:
         print(f'Connection to Servers failed : status {e}')
     
+    #Call MCP server Anlaytics tools with expanded Prompt and Web Search results
     result = []
     try:
-       webresult = await web_search(exPrompt)
+       webresult = await web_search(prompt)
        result =  await asyncio.gather(
-                    Theoritical_Domain.call_analysis("theoriticalServer", {"prompt": exPrompt, "webres":webresult}),
-                    Structural_Domain.call_analysis("structuralServer", {"prompt": exPrompt,"webres":webresult}),
-                    Logical_Domain.call_analysis("logicalServer", {"prompt": exPrompt,"webres":webresult})
+                    Theoritical_Domain.call_analysis("theoriticalServer", {"prompt": prompt, "webres":webresult,"EvlScore":EvalScore}),
+                    Structural_Domain.call_analysis("structuralServer", {"prompt": prompt,"webres":webresult,"EvlScore":EvalScore}),
+                    Logical_Domain.call_analysis("logicalServer", {"prompt": prompt,"webres":webresult,"EvlScore":EvalScore})
                      )
     except Exception as e:
         print(f'Something went wrong: Error Details : {e}')
         
     finally:    
+        #Close all asynchronous threads after tool call finishes
         await asyncio.gather(
             Theoritical_Domain.close_async_context(),
             Structural_Domain.close_async_context(),
@@ -119,13 +142,19 @@ async def runAnalysis(prompt: str):
 
 
    # --- Gemma Summarizes Results --- #
+    response = "" #type: ignore
+    
     try:
+        systemP= """
+                    Merge all these Responses into One cohessive Response Stictly adhere to what is provided.
+                    Your Output should be the merged Analysis only. NO Preambles or anything of that sort
+                 """
         response: ChatResponse = chat(
             model='gemma3:4b',
             messages=[
                 {
                     'role':'system',
-                    'content':"Merge all these Responses into One cohessive Response Stictly adhere to what is provided"
+                    'content': systemP
                 },
                 {
                 'role': 'user',
@@ -137,13 +166,14 @@ async def runAnalysis(prompt: str):
             }
             ]
         )
-
-        await ragembeddings(Prompt= response.message.content)#type: ignore
-        return response.message.content
-    
+        return str(response.message.content).strip()
     except Exception as e:
         print("failed summarize all Analysis ")
         print(f"Error Details : {e} ")
+        return
+
+
+        
 
         
 
