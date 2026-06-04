@@ -72,14 +72,17 @@ with st.form("Analysis Tool"):
                     print(f'Expanded Prompt: \n {exPrompt} \n')
 
                     result = asyncio.run(runAnalysis(prompt= exPrompt))  # type: ignore
+
                     evl_result = Evaluation(result, exPrompt) # type: ignore
                     
                     if evl_result >= 7:
+                        print(f"\n {result}")
                         st.text(result)
                         ragembeddings(Prompt= result)#type: ignore
                         
                     else:
                        result = asyncio.run(runAnalysis(exPrompt,str(evl_result))) 
+                       print(f"\n {result}")
                        st.text(result)
                        ragembeddings(Prompt= result)#type: ignore
 if result !="": 
