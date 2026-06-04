@@ -17,7 +17,6 @@ import streamlit as st
 from Configuration import Test_Connection_To_Gemma3, localResourcesShellSetup
 from Orchestration import ragembeddings,runAnalysis,promptexpansion
 from Evaluation import Evaluation
-from Rag.PDFReport import generate_pdf
 
 result = ""
 st.markdown(
@@ -84,13 +83,12 @@ with st.form("Analysis Tool"):
                        st.text(result)
                        ragembeddings(Prompt= result)#type: ignore
 if result !="": 
-        pdf_data = generate_pdf(result) #type: ignore
-        # 4. Streamlit download button handles the file delivery
+
         st.download_button(
             label="📥 Download PDF Report",
-            data=bytes(pdf_data),
-            file_name="report.pdf",
-            mime="application/pdf"
+            data=result, #type: ignore
+            file_name="report.txt",
+            mime="text/plain; charset=utf-8"
                                 )           
                        
                      
