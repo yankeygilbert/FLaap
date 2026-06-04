@@ -30,7 +30,7 @@ from Rag.websearch import web_search
 
 
 #--- Function to embed User data and/or Prompt into Qdrant ---#
-async def ragembeddings(Prompt: str = "", Data: list =[]):
+def ragembeddings(Prompt: str = "", Data: list =[]):
 
     EmbbeddingsAndIndexing(prompt=Prompt,data=Data)
 

@@ -18,6 +18,7 @@ from Configuration import Test_Connection_To_Gemma3, localResourcesShellSetup
 from Orchestration import ragembeddings,runAnalysis,promptexpansion
 from Evaluation import Evaluation
 
+result = ""
 st.markdown(
     '''
     <style>
@@ -53,7 +54,7 @@ with st.form("Analysis Tool"):
         if uploaded_files:
             try:
                 with st.spinner("Processing And Embedding Data"):
-                    result = asyncio.run(ragembeddings(Data=uploaded_files))
+                     ragembeddings(Data=uploaded_files)
             except Exception as e:
                 print(f'Error with Document upload: {e}')
             
@@ -74,13 +75,21 @@ with st.form("Analysis Tool"):
                     evl_result = Evaluation(result, exPrompt) # type: ignore
                     
                     if evl_result >= 7:
-                        Rag = asyncio.run(ragembeddings(Prompt= result))#type: ignore
                         st.text(result)
+                        ragembeddings(Prompt= result)#type: ignore
                         
                     else:
                        result = asyncio.run(runAnalysis(exPrompt,str(evl_result))) 
-                       Rag = asyncio.run(ragembeddings(Prompt= result))#type: ignore   
                        st.text(result)
+                       ragembeddings(Prompt= result)#type: ignore
+if result !="": 
+
+        st.download_button(
+            label="📥 Download PDF Report",
+            data=result, #type: ignore
+            file_name="report.txt",
+            mime="text/plain; charset=utf-8"
+                                )           
                        
                      
 
