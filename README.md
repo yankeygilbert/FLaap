@@ -3,7 +3,7 @@
 This is an Agentic AI tool designed to catch structural, logical and theoritical and hypothetical flaws that lead experimental and production implementation failures. This is desinged to be used by Reseachers, Engineers in subject matter domains where concise expert knowldge is required to resolve technical and structural flaws leading to  implemention failures.
 
 ### Problem Definition and Constriants:
-This project is specificslly aimed at catching structural, logical and theoritical flaws in an R&D Design and implementation stage. 
+This project is specificslly aimed at catching structural, logical and theoritical flaws in an R&D Design and implementation stage.
 **!!! This is not a code debugger(although it has inherent capbalities to identify implementaion logic flaws) or code Implementer**  <br>
 
 1. **Strucrureal flaw**: This is an inherent systemic weakness in the arrangements and or composition of system.largely anchored to design philosophy and design orchestration flow errors <br>
