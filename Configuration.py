@@ -21,6 +21,7 @@ def localResourcesShellSetup():
     except subprocess.CalledProcessError as e:
         print(f'Failed to Setup Local Resources \n')
         print(f'Error Details : {e.returncode}', file=sys.stderr)
+        return 1
 
 #--- Test Connection to Gemma3:4b ---#
 def Test_Connection_To_Gemma3():
