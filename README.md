@@ -14,6 +14,10 @@ This project is specificslly aimed at catching structural, logical and theoritic
     1. Resposne: logical,structural,thoeritcal flaw findings, 
     2. Suggested Recommendation
 
+### Usage:
+1. pip install requirements.txt
+2. streamlit run App.py
+
 ### Process Workflow:
 ##### Architecure Design: 
 ```mermaid
