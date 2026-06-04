@@ -140,7 +140,6 @@ async def runAnalysis(prompt: str, EvalScore: str = "None"):
             return_exceptions= True
         )
 
-
    # --- Gemma Summarizes Results --- #
     response = "" #type: ignore
     
