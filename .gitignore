@@ -1,1 +1,7 @@
 .env
+__pycache__
+.vscode
+env
+mcp_Client_server/__pycache__
+Rag/__pycache__
+qdrant_storage
