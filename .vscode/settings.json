@@ -1,0 +1,4 @@
+{
+    "python.analysis.typeEvaluation.enableReachabilityAnalysis": false,
+    "python.analysis.typeCheckingMode": "standard"
+}
