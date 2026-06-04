@@ -1,0 +1,147 @@
+"""Tool To Perform logical Flaw Analysis
+
+        Args:
+            prompt: A user Prompt and Web search result
+"""
+
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from mcp.server.fastmcp import FastMCP
+from mcp.server.stdio import stdio_server
+from Rag.EmbeddingsAndVectorStore import context_retrieval
+from ollama import chat
+from ollama import ChatResponse
+
+server = FastMCP("theoriticalServer")
+
+#--- Analysis Server Tool method with search grounding activated ---#
+async def contextRet(prompt: str, webres:str, EvlScore: str):
+        TheoriticalExtractionQuery = """
+        Represent this query for retrieving relevant academic document sections stored as metadata pages(images): 
+        A research paper Abstract, Introduction, Background, Literature Review, and Discussion sections containing: 
+        primary hypotheses, foundational premises, axiomatic assumptions, causal mechanisms, and conceptual frameworks. 
+        This extraction must capture the core deductive reasoning, axiomatic boundaries, 
+        and theoretical paradigms necessary to detect theoretical flaws, such as circular reasoning, unbacked conceptual leaps, 
+        flawed premises, and invalid causal claims.
+        """
+        gemmaEmbInstructPfx: str = TheoriticalExtractionQuery.strip() +" User Prompt:"+ prompt
+        context_ret = context_retrieval(query_docs= gemmaEmbInstructPfx)
+        
+        doc_results = context_ret.get("docs", [])
+        memory_results = context_ret.get("memory", [])
+
+        # Extract from docs (text + b64 from Qdrant scroll)
+        pdf_context = [r["text"] for r in doc_results]
+        base64_images = [r["img_b64"] for r in doc_results if r["img_b64"] is not None]
+
+        # Extract from memory
+        memory_context = [r["text"] for r in memory_results]
+
+        content = f"""
+                ###Analytics Evaluation Score: IF "None" means Generate First original Analytics, IF < 7 means Improve Previous Analytics to meet users request###
+                Evaluation Score: {EvlScore}
+                ### User Query ###
+                {prompt}
+
+                ### Web Search Results ###
+                {webres}
+
+                ###PDF TEXT CONTENT :###
+                {pdf_context}
+
+                ###Memory context :##
+                {memory_context}
+
+                ### Base64 Encoded Page Images: ###
+                {base64_images}
+            """
+        
+        return content
+
+@server.tool(name="theoriticalServer")
+async def theoriticalanalysis(prompt: str, webres:str, EvlScore: str) :
+    """Tool To Perform logical Flaw Analysis
+
+        Args:
+            prompt: A user Prompt
+    """
+
+    systemPrompt = """
+                    You are a Theoretical Analysis Specialist in R&D.
+
+                    Your job is to analyse the theoretical foundations of a design implementation.
+
+                    Your role is to examine the conceptual framework, underlying theories, assumptions, constructs, and theoretical justification used in the implementation, and identify all theoretical weaknesses.
+
+                    Your analysis must include:
+
+                    - Weak or missing theoretical foundations
+                    - Unsupported theoretical assumptions
+                    - Inconsistent theoretical framework
+                    - Poor alignment between theory and implementation
+                    - Missing conceptual links
+                    - Undefined or poorly defined constructs
+                    - Weak operationalisation of theoretical concepts
+                    - Inadequate justification of theoretical choices
+                    - Conflicting theories or conceptual models
+                    - Gaps between theory and expected outcomes
+
+                    For every theoretical issue you detect, you must:
+
+                    1. Name the theoretical issue
+                    2. Quote the exact part of the implementation that contains it
+                    3. Explain why it is a theoretical weakness
+                    4. Explain the potential impact on the implementation
+                    5. Suggest how the theoretical foundation could be strengthened
+
+                    You must be precise, rigorous, and exhaustive.
+
+                    You do not rewrite the implementation; you only analyse it.
+
+                    You prioritise correctness, consistency, and theoretical soundness.
+
+                    Your output format must be:
+
+                    1. Summary of overall theoretical quality
+                    2. Detected theoretical issues
+                    3. Explanation of each issue
+                    4. Impact of each issue
+                    5. Suggested improvements
+
+                    If the implementation contains no theoretical weaknesses, state explicitly that the implementation is theoretically sound and explain why.
+                    """
+
+    contents = await contextRet(prompt,webres,EvlScore) 
+
+# Call to Gemma to Reason on context and Prompt
+    try:
+        response: ChatResponse = chat(
+        model='gemma3:4b',
+        messages=[
+            {
+                'role':'system',
+                'content': systemPrompt
+            },
+
+            {
+                'role': 'user',
+                'content': contents
+  
+                }
+            ]
+        )
+        return str(response.message.content).strip()
+    
+    except Exception as e:
+        sys.stderr.write(f"Something went Wrong : {e}")
+
+
+def main():
+    server.run(transport= "stdio") 
+
+if __name__ == "__main__":
+    main()
+
