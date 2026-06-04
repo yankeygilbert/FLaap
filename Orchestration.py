@@ -102,7 +102,7 @@ def promptexpansion(prompt: str) -> str:
     return response.strip()
 
 #--- Domain Agent Analysis ---#
-async def runAnalysis(prompt: str):
+async def runAnalysis(prompt: str, EvalScore: str = "None"):
     # Set up MCP clients to all three MCP servers
     Theoritical_Domain = mcpclient("Theoretical")
     Structural_Domain = mcpclient("Structural")
@@ -124,9 +124,9 @@ async def runAnalysis(prompt: str):
     try:
        webresult = await web_search(prompt)
        result =  await asyncio.gather(
-                    Theoritical_Domain.call_analysis("theoriticalServer", {"prompt": prompt, "webres":webresult}),
-                    Structural_Domain.call_analysis("structuralServer", {"prompt": prompt,"webres":webresult}),
-                    Logical_Domain.call_analysis("logicalServer", {"prompt": prompt,"webres":webresult})
+                    Theoritical_Domain.call_analysis("theoriticalServer", {"prompt": prompt, "webres":webresult,"EvlScore":EvalScore}),
+                    Structural_Domain.call_analysis("structuralServer", {"prompt": prompt,"webres":webresult,"EvlScore":EvalScore}),
+                    Logical_Domain.call_analysis("logicalServer", {"prompt": prompt,"webres":webresult,"EvlScore":EvalScore})
                      )
     except Exception as e:
         print(f'Something went wrong: Error Details : {e}')
@@ -145,12 +145,16 @@ async def runAnalysis(prompt: str):
     response = "" #type: ignore
     
     try:
+        systemP= """
+                    Merge all these Responses into One cohessive Response Stictly adhere to what is provided.
+                    Your Output should be the merged Analysis only. NO Preambles or anything of that sort
+                 """
         response: ChatResponse = chat(
             model='gemma3:4b',
             messages=[
                 {
                     'role':'system',
-                    'content':"Merge all these Responses into One cohessive Response Stictly adhere to what is provided"
+                    'content': systemP
                 },
                 {
                 'role': 'user',

@@ -7,7 +7,8 @@ def Evaluation(response,prompt):
     try:
         systemPrompt= """
                         You are a strict evaluation API. Your ONLY output allowed is a single,
-                        raw integer from 0 to 10 reflecting the response quality to users prompt.
+                        raw integer from 0 to 10 reflecting the responses alignment to users prompt.
+                        Factor Scoring on Hallucination and ALigned Reasoning.
                         Do NOT include markdown block wraps (like ```), do NOT include text,
                         do NOT include spaces, do NOT include punctuation, and do NOT explain your reasoning.
                       """

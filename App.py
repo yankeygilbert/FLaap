@@ -74,11 +74,13 @@ with st.form("Analysis Tool"):
                     evl_result = Evaluation(result, exPrompt) # type: ignore
                     
                     if evl_result >= 7:
+                        Rag = asyncio.run(ragembeddings(Prompt= result))#type: ignore
                         st.text(result)
-                        await ragembeddings(Prompt= response.message.content)#type: ignore
+                        
                     else:
-                       result = asyncio.run(runAnalysis(prompt= prompt))    
+                       result = asyncio.run(runAnalysis(exPrompt,str(evl_result))) 
+                       Rag = asyncio.run(ragembeddings(Prompt= result))#type: ignore   
                        st.text(result)
-                       await ragembeddings(Prompt= response.message.content)#type: ignore
+                       
                      
 

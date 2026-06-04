@@ -20,7 +20,7 @@ server = FastMCP("logicalServer")
 
 #--- Analysis Server Tool method with search grounding activated ---#
  
-async def contextRet(prompt, web_search):
+async def contextRet(prompt: str, webres: str, EvlScore: str):
         logicalExtractionQuery = """
         Represent this query for retrieving relevant academic document sections stored as metadata pages(images): 
         A research paper Implementation, Results, Discussion, Evaluation,
@@ -44,11 +44,13 @@ async def contextRet(prompt, web_search):
         memory_context = [r["text"] for r in memory_results]
 
         content =  f"""
+                ###Analytics Evaluation Score: IF "None" means Generate First original Analytics, IF < 7 means Improve Previous Analytics to meet users request###
+                Evaluation Score: {EvlScore}
                 ### User Query ###
                 {prompt}   
                 
                 ### Web Search Results ###
-                {web_search}
+                {webres}
 
                 ###PDF TEXT CONTENT :###
                 {pdf_context}
@@ -64,7 +66,7 @@ async def contextRet(prompt, web_search):
 
 #--- MCP Server TooL ---#
 @server.tool(name= "logicalServer")
-async def logicalanalysis(prompt: str, webres: str) :
+async def logicalanalysis(prompt: str, webres: str, EvlScore: str) :
 
     """Tool To Perform logical Flaw Analysis
 
@@ -107,7 +109,7 @@ async def logicalanalysis(prompt: str, webres: str) :
             If the argument contains no logical flaws, state clearly that the implementation is logically correct and explain why.
             """
     
-    contents = await contextRet(prompt,webres)  
+    contents = await contextRet(prompt,webres,EvlScore)  
 
     # Call to Gemma to Reason on context and Prompt
     try:

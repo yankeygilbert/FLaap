@@ -19,7 +19,7 @@ from ollama import ChatResponse
 server = FastMCP("structuralServer")
 
 #--- Analysis Server Tool method with search grounding activated ---#
-async def contextRet(prompt,web_search):
+async def contextRet(prompt: str, webres:str,EvlScore: str):
         structuralExtractionQuery = """
             Represent this query for retrieving relevant Research document sections stored as metadata pages(images): 
             A research paper Abstract, Introduction, Methodology, and Experimental Design sections containing: study architectures, 
@@ -43,11 +43,13 @@ async def contextRet(prompt,web_search):
         memory_context = [r["text"] for r in memory_results]
 
         content = f"""
+                ###Analytics Evaluation Score: IF "None" means Generate First original Analytics, IF < 7 means Improve Previous Analytics to meet users request###
+                    Evaluation Score: {EvlScore}
                 ### User Query ###
                 {prompt}   
 
                 ### Web Search Results ###
-                {web_search}
+                {webres}
                 
                 ###PDF TEXT CONTENT :###
                 {pdf_context}
@@ -64,7 +66,7 @@ async def contextRet(prompt,web_search):
 
 
 @server.tool(name= "structuralServer")
-async def StructuralAnalysis(prompt: str, webres:str) :
+async def StructuralAnalysis(prompt: str, webres:str,EvlScore: str) :
     """Tool To Perform logical Flaw Analysis
 
         Args:
@@ -109,7 +111,7 @@ async def StructuralAnalysis(prompt: str, webres:str) :
     
     
 
-    contents = await contextRet(prompt,webres)  
+    contents = await contextRet(prompt,webres,EvlScore)  
 
     # Call to Gemma to Reason on context and Prompt
 
