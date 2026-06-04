@@ -11,7 +11,7 @@ This project is specificslly aimed at catching structural, logical and theoritic
     1. Prompt, 
     2. Research Documentation or Implementation Design Documentation 
 2. #### Output: 
-    1. Resposne: logical,structural,thoeritcal flaw findings, 
+    1. Response: logical,structural,thoeritcal flaw findings, 
     2. Suggested Recommendation
 
 ### Usage:
