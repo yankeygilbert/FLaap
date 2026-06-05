@@ -70,9 +70,10 @@ with st.form("Analysis Tool"):
                     
                     exPrompt = promptexpansion(prompt) # Call Prompt expansion Implementation Function
                     print(f'Expanded Prompt: \n {exPrompt} \n')
-
-                    result = asyncio.run(runAnalysis(prompt= exPrompt))  # type: ignore
-
+                    async def analysis():
+                        return await runAnalysis(prompt= exPrompt)  # type: ignore
+                    result = asyncio.run(analysis())
+                    
                     evl_result = Evaluation(result, exPrompt) # type: ignore
                     
                     if evl_result >= 7:
@@ -81,7 +82,9 @@ with st.form("Analysis Tool"):
                         ragembeddings(Prompt= result)#type: ignore
                         
                     else:
-                       result = asyncio.run(runAnalysis(exPrompt,str(evl_result))) 
+                       async def EvaluatedAnalysis():
+                           return await runAnalysis(exPrompt,str(evl_result))
+                       result = asyncio.run(EvaluatedAnalysis()) 
                        print(f"\n {result}")
                        st.text(result)
                        ragembeddings(Prompt= result)#type: ignore

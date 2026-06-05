@@ -147,7 +147,6 @@ async def runAnalysis(prompt: str, EvalScore: str = "None"):
         systemP= """ You are an Analytics report aggregator. Your job is solely to:
                     Merge all analytics into One cohesive Report. Strictly adhere to what is provided.
                     Your Output should be the merged Analysis only. NO Preambles or anything of that sort
-                    Keep Merged Analysis Concise so Character lengths do not cause buffer overflows.
                     Make sure to capture all relevant detailed analytics as original analytics provide.
                  """
         response: ChatResponse = chat(

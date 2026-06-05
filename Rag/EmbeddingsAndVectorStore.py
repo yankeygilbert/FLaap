@@ -44,16 +44,16 @@ def EmbbeddingsAndIndexing(prompt: str="", data: list=[], ):
                 collection_name="PromptandResponse",
                 client= QDrant_Client,
             )
-            print("DEBUG 2: vector store created")
+           
             stg_context = StorageContext.from_defaults(vector_store=Vec_Store)
-            print("DEBUG 3: storage context created")
+           
             prompt_doc = Document(text=prompt)
-            print("DEBUG 4: document created")
+      
             index = VectorStoreIndex.from_documents(
                 [prompt_doc],
                 storage_context=stg_context
             )
-            print("DEBUG 5: Memory indexing complete")
+            print("STATUS: Memory indexing complete")
         except Exception as e:
             print(f"Prompt embedding failed: {e}")
             import traceback
