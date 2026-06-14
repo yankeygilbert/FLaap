@@ -26,6 +26,9 @@ This project is specifically aimed at catching structural, logical and theoritic
 ![alt text](<Screenshot 2026-06-14 at 09.24.55.png>)
 ![alt text](<Screenshot 2026-06-14 at 09.30.24.png>)
 
+###Evaluation Technqiue:
+The systems goes through a One loop hallucination and faithfulness evaluation where the analytics response is evaluated against the users query and provided documentation to minimize the likelyhood of hallucination and ensure relevant analytics is provided.
+
 ### Process Workflow:
 ##### Architecure Design: 
 ```mermaid
