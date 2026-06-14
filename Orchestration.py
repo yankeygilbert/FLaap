@@ -144,10 +144,8 @@ async def runAnalysis(prompt: str, EvalScore: str = "None"):
     response = "" #type: ignore
     
     try:
-        systemP= """ You are an Analytics report aggregator. Your job is solely to:
-                    Merge all analytics into One cohesive Report. Strictly adhere to what is provided.
-                    Your Output should be the merged Analysis only. NO Preambles or anything of that sort
-                    Make sure to capture all relevant detailed analytics as original analytics provide.
+        systemP= """ 
+                    Merge all analytics into one cohesive Response. Strictly adhere to what is provided.  
                  """
         response: ChatResponse = chat(
             model='gemma3:4b',
@@ -159,8 +157,11 @@ async def runAnalysis(prompt: str, EvalScore: str = "None"):
                 {
                 'role': 'user',
                 'content':f"""
+                    ##Analytics 1###
                     {result[0]}
+                    ##Analytics 2##
                     {result[1]}
+                    ##Analytics 3##
                     {result[2]}
                 """
             }

@@ -23,6 +23,9 @@ This project is specifically aimed at catching structural, logical and theoritic
 1. pip install requirements.txt
 2. streamlit run App.py
 
+![alt text](<Screenshot 2026-06-14 at 09.24.55.png>)
+![alt text](<Screenshot 2026-06-14 at 09.30.24.png>)
+
 ### Process Workflow:
 ##### Architecure Design: 
 ```mermaid

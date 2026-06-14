@@ -76,7 +76,7 @@ with st.form("Analysis Tool"):
                     
                     evl_result = Evaluation(result, exPrompt) # type: ignore
                     
-                    if evl_result >= 7:
+                    if evl_result >= 5.9:
                         print(f"\n {result}")
                         st.text(result)
                         ragembeddings(Prompt= result)#type: ignore
