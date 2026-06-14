@@ -145,7 +145,9 @@ async def runAnalysis(prompt: str, EvalScore: str = "None"):
     
     try:
         systemP= """ 
-                    Merge all analytics into one cohesive Response. Strictly adhere to what is provided.  
+                    Merge all analytics into one cohesive Response. Strictly adhere to what is provided. 
+                    NO PreAmbles.
+                    Only Return the Merged Analytics as a cohesive a Response.  
                  """
         response: ChatResponse = chat(
             model='gemma3:4b',
